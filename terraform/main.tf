@@ -20,6 +20,11 @@ provider "aws" {
 
 locals {
   lambda_package = "${path.module}/../lambda/build/lambda.zip"
+  chromium_layer = var.chromium_layer_arn != "" ? var.chromium_layer_arn : data.aws_lambda_layer_version.chromium.arn
+}
+
+data "aws_lambda_layer_version" "chromium" {
+  layer_name = "arn:aws:lambda:${var.aws_region}:764866452798:layer:chromium"
 }
 
 data "archive_file" "lambda" {
@@ -64,7 +69,7 @@ resource "aws_lambda_function" "proxy" {
   handler = "src/handler.handler"
   runtime = "nodejs20.x"
 
-  layers = [var.chromium_layer_arn]
+  layers = [local.chromium_layer]
 
   memory_size = 1536
   timeout     = 30
@@ -118,6 +123,11 @@ data "aws_caller_identity" "current" {}
 output "invoke_url" {
   description = "API Gateway base URL"
   value       = aws_apigatewayv2_stage.default.invoke_url
+}
+
+output "chromium_layer_arn" {
+  description = "ARN of the Chromium Lambda layer in use"
+  value       = local.chromium_layer
 }
 
 output "lambda_role_arn" {

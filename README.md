@@ -26,14 +26,14 @@ This project packages an AWS Lambda behind an Amazon API Gateway endpoint. It pr
    encrypt = true
    ```
 
-3. **Initialize and deploy with Terraform**, providing the ARN of a Chromium Lambda layer (for example, the published `@sparticuz/chromium` layer for your region):
+3. **Initialize and deploy with Terraform**. By default, the Terraform module will attach the latest published `@sparticuz/chromium` layer for your region. If you want to override it with a specific layer ARN, pass `-var "chromium_layer_arn=<your-layer-arn>"`.
    ```bash
    cd terraform
    terraform init -backend-config=backend.hcl
-   terraform apply -var "chromium_layer_arn=arn:aws:lambda:<region>:764866452798:layer:chromium:126"
+   terraform apply
    ```
 
-   Ensure the backend bucket/key exist, your AWS credentials are configured, and the layer ARN matches your region/version. See [@sparticuz/chromium releases](https://github.com/Sparticuz/chromium#aws-lambda-layer) for the latest ARNs.
+   Ensure the backend bucket/key exist, your AWS credentials are configured, and that your AWS account can access the public `@sparticuz/chromium` layer (account `764866452798`). If you need to pin a specific version or use a custom layer, provide its ARN via `chromium_layer_arn`. See [@sparticuz/chromium releases](https://github.com/Sparticuz/chromium#aws-lambda-layer) for the latest ARNs.
 
 4. **Invoke**: After apply, Terraform outputs `invoke_url`. Append an encoded URL path to use the proxy, such as:
    ```

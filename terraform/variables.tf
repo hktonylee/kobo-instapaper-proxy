@@ -7,4 +7,5 @@ variable "aws_region" {
 variable "chromium_layer_arn" {
   description = "ARN of a Lambda layer that provides headless Chromium (e.g., @sparticuz/chromium)."
   type        = string
+  default     = ""
 }
