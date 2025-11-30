@@ -10,7 +10,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   };
 
   const goto = mock.fn(async () => {});
-  const content = mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo">read more</a><p>Content</p></article></body></html>');
+  const content = mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><p>Content</p></article></body></html>');
   const close = mock.fn(async () => {});
 
   const launch = mock.fn(async () => ({
@@ -27,7 +27,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
 
   assert.equal(response.statusCode, 200);
   assert.match(response.body, /Example Article/);
-  assert.match(response.body, /https:\/\/proxy\.test\/https%3A%2F%2Fexample\.com%2Ffoo/);
+  assert.match(response.body, /https:\/\/proxy\.test\/https:\/\/example\.com\/foo\?bar=baz/);
 
   assert.equal(launch.mock.calls.length, 1);
   const launchArgs = launch.mock.calls[0].arguments[0];

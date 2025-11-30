@@ -66,7 +66,7 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
     }
   };
 
-  const toProxy = (absoluteUrl) => `${proxyBase}/${encodeURIComponent(absoluteUrl)}`;
+  const toProxy = (absoluteUrl) => `${proxyBase}/${encodeURI(absoluteUrl)}`;
 
   const elements = doc.querySelectorAll('[href], [src]');
   elements.forEach((element) => {
