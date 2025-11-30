@@ -33,11 +33,21 @@ const normalizeTargetUrl = (rawPath = '') => {
   if (!trimmed) return null;
 
   const decoded = decodeURIComponent(trimmed);
-  if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
-    return decoded;
+  const withNormalizedProtocolSlashes = decoded.replace(/^(https?:)\/(?!\/)/i, '$1//');
+
+  const protocolMatch = withNormalizedProtocolSlashes.match(/^([a-z][a-z0-9+.-]*:)/i);
+  if (protocolMatch) {
+    const protocol = protocolMatch[1].toLowerCase();
+    if (protocol !== 'http:' && protocol !== 'https:') {
+      throw new Error(`Unsupported protocol: ${protocol}`);
+    }
   }
 
-  return `https://${decoded}`;
+  if (withNormalizedProtocolSlashes.startsWith('http://') || withNormalizedProtocolSlashes.startsWith('https://')) {
+    return withNormalizedProtocolSlashes;
+  }
+
+  return `https://${withNormalizedProtocolSlashes}`;
 };
 
 const buildProxyBase = (event) => {
@@ -92,7 +102,13 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
 };
 
 export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
-  const targetUrl = normalizeTargetUrl(event.rawPath || event.path || '/');
+  let targetUrl;
+  try {
+    targetUrl = normalizeTargetUrl(event.rawPath || event.path || '/');
+  } catch (error) {
+    return { statusCode: 400, body: error.message };
+  }
+
   if (!targetUrl) {
     return { statusCode: 400, body: 'A target URL is required in the path.' };
   }

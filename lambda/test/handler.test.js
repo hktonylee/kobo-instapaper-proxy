@@ -43,3 +43,56 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.equal(content.mock.calls.length, 1);
   assert.equal(close.mock.calls.length, 1);
 });
+
+test('handler normalizes single-slash https URLs', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const goto = mock.fn(async () => {});
+  const content = mock.fn(async () => '<html><body><p>Content</p></body></html>');
+  const close = mock.fn(async () => {});
+
+  const launch = mock.fn(async () => ({
+    newPage: async () => ({ goto, content }),
+    close,
+  }));
+
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
+
+  const response = await handler({
+    rawPath: '/https:/news.ycombinator.com/news',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(goto.mock.calls[0].arguments[0], 'https://news.ycombinator.com/news');
+});
+
+test('handler rejects unsupported protocols', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const goto = mock.fn(async () => {});
+  const content = mock.fn(async () => '<html><body><p>Content</p></body></html>');
+  const close = mock.fn(async () => {});
+
+  const launch = mock.fn(async () => ({
+    newPage: async () => ({ goto, content }),
+    close,
+  }));
+
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
+
+  const response = await handler({
+    rawPath: '/ftp://example.com/resource',
+  });
+
+  assert.equal(response.statusCode, 400);
+  assert.equal(response.body, 'Unsupported protocol: ftp:');
+  assert.equal(launch.mock.calls.length, 0);
+});
