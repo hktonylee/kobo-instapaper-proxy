@@ -38,7 +38,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
 
   assert.equal(goto.mock.calls.length, 1);
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
-  assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'networkidle' });
+  assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'networkidle0' });
 
   assert.equal(content.mock.calls.length, 1);
   assert.equal(close.mock.calls.length, 1);
