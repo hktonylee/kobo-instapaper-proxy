@@ -10,7 +10,7 @@ This project packages an AWS Lambda behind an Amazon API Gateway endpoint. It pr
 
 ## Getting started
 
-1. **Build the Lambda artifact** (produces a minified `lambda/dist` bundle with production dependencies). The build disables Chromium downloads because the binary is supplied by a Lambda layer:
+1. **Build the Lambda artifact** (produces a single minified `lambda/dist/src/handler.js` bundle without shipping `node_modules`). The build disables Chromium downloads because the binary is supplied by a Lambda layer and bundles all other dependencies into the handler:
    ```bash
    cd lambda
    npm run build
