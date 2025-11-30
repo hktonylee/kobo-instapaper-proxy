@@ -13,7 +13,17 @@ await build({
   target: 'node20',
   outfile: 'dist/src/handler.js',
   external: ['@sparticuz/chromium'],
-  plugins: [],
+  plugins: [
+    {
+      name: 'externalize-xhr-worker',
+      setup(build) {
+        build.onResolve({ filter: /xhr-sync-worker\.js$/ }, (args) => ({
+          path: args.path,
+          external: true,
+        }));
+      },
+    },
+  ],
 });
 
 mkdirSync('dist', { recursive: true });
