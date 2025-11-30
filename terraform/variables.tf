@@ -3,3 +3,8 @@ variable "aws_region" {
   type        = string
   default     = "us-west-2"
 }
+
+variable "chromium_layer_arn" {
+  description = "ARN of a Lambda layer that provides headless Chromium (e.g., @sparticuz/chromium)."
+  type        = string
+}

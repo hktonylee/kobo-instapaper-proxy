@@ -1,7 +1,7 @@
 import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
 import chromium from '@sparticuz/chromium';
-import playwright from 'playwright-core';
+import puppeteer from 'puppeteer-core';
 
 const MINIMAL_STYLES = `
   body { font-family: 'Georgia', 'Times New Roman', serif; margin: 1.5rem auto; max-width: 740px; padding: 0 1rem; background: #f9f9f9; color: #222; }
@@ -102,7 +102,7 @@ export const handler = async (event) => {
   let browser;
 
   try {
-    browser = await playwright.chromium.launch({
+    browser = await puppeteer.launch({
       args: chromium.args,
       executablePath,
       headless: chromium.headless,

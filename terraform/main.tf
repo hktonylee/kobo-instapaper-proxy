@@ -64,6 +64,8 @@ resource "aws_lambda_function" "proxy" {
   handler = "src/handler.handler"
   runtime = "nodejs20.x"
 
+  layers = [var.chromium_layer_arn]
+
   memory_size = 1536
   timeout     = 30
 
