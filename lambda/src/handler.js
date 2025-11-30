@@ -104,7 +104,11 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
 export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
   let targetUrl;
   try {
-    targetUrl = normalizeTargetUrl(event.rawPath || event.path || '/');
+    const rawPath = event.rawPath || event.path || '/';
+    const rawQueryString = event.rawQueryString || '';
+    const rawTarget = rawQueryString ? `${rawPath}?${rawQueryString}` : rawPath;
+
+    targetUrl = normalizeTargetUrl(rawTarget);
   } catch (error) {
     return { statusCode: 400, body: error.message };
   }
