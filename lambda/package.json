@@ -5,12 +5,15 @@
   "type": "module",
   "main": "src/handler.js",
   "scripts": {
-    "build": "rm -rf dist && mkdir -p dist && cp package.json package-lock.json dist/ && cp -r src dist/ && CHROMIUM_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --omit=dev --ignore-scripts --prefix dist"
+    "build": "rm -rf dist && mkdir -p dist/src && cp package.json package-lock.json dist/ && CHROMIUM_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --omit=dev --ignore-scripts --prefix dist && npx esbuild src/handler.js --bundle --minify --platform=node --format=esm --target=node20 --outfile=dist/src/handler.js --external:@sparticuz/chromium --external:puppeteer-core"
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
     "@sparticuz/chromium": "^126.0.0",
     "jsdom": "^24.1.0",
     "puppeteer-core": "^22.10.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.1"
   }
 }
