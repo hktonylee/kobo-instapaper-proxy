@@ -70,6 +70,33 @@ test('handler normalizes single-slash https URLs', async () => {
   assert.equal(goto.mock.calls[0].arguments[0], 'https://news.ycombinator.com/news');
 });
 
+test('handler forwards query strings to the target URL', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const goto = mock.fn(async () => {});
+  const content = mock.fn(async () => '<html><body><p>Content</p></body></html>');
+  const close = mock.fn(async () => {});
+
+  const launch = mock.fn(async () => ({
+    newPage: async () => ({ goto, content }),
+    close,
+  }));
+
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
+
+  const response = await handler({
+    rawPath: '/https://example.com/search',
+    rawQueryString: 'q=kobo&page=2',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/search?q=kobo&page=2');
+});
+
 test('handler rejects unsupported protocols', async () => {
   const chromiumLib = {
     executablePath: async () => '/opt/chromium',
