@@ -26,7 +26,7 @@ This project packages an AWS Lambda behind an Amazon API Gateway endpoint. It pr
    encrypt = true
    ```
 
-3. **Initialize and deploy with Terraform**. By default, the Terraform module will attach the latest published `@sparticuz/chromium` layer for your region. If you want to override it with a specific layer ARN, pass `-var "chromium_layer_arn=<your-layer-arn>"`.
+3. **Initialize and deploy with Terraform**. By default, the Terraform module will attach the pinned `@sparticuz/chromium` layer release `arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:50` (resolved for your chosen region). If you want to override it with a specific layer ARN, pass `-var "chromium_layer_arn=<your-layer-arn>"`.
    ```bash
    cd terraform
    terraform init -backend-config=backend.hcl

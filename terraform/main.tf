@@ -24,7 +24,8 @@ locals {
 }
 
 data "aws_lambda_layer_version" "chromium" {
-  layer_name = "arn:aws:lambda:${var.aws_region}:764866452798:layer:chromium"
+  layer_name = "arn:aws:lambda:${var.aws_region}:764866452798:layer:chrome-aws-lambda"
+  version    = 50
 }
 
 data "archive_file" "lambda" {
