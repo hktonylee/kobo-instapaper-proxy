@@ -1,0 +1,16 @@
+{
+  "name": "kobo-instapaper-proxy-lambda",
+  "version": "0.1.0",
+  "description": "Lambda handler that renders pages through headless Chrome and rewrites links for a proxy.",
+  "type": "module",
+  "main": "src/handler.js",
+  "scripts": {
+    "build": "rm -rf dist && mkdir -p dist && cp package.json package-lock.json dist/ && cp -r src dist/ && npm ci --omit=dev --prefix dist"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.5.0",
+    "@sparticuz/chromium": "^126.0.0",
+    "jsdom": "^24.1.0",
+    "playwright-core": "^1.45.0"
+  }
+}

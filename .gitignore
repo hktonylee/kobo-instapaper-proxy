@@ -1,0 +1,19 @@
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+terraform/backend.hcl
+
+# Lambda build artifacts
+lambda/dist/*
+!lambda/dist/.gitkeep
+lambda/build/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# IDE
+.DS_Store
