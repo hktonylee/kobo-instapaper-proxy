@@ -110,7 +110,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
     });
 
     const page = await browser.newPage();
-    await page.goto(targetUrl, { waitUntil: 'networkidle' });
+    await page.goto(targetUrl, { waitUntil: 'networkidle0' });
     const pageContent = await page.content();
 
     const dom = new JSDOM(pageContent, { url: targetUrl });
