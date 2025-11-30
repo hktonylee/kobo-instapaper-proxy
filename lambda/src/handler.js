@@ -91,21 +91,21 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
   });
 };
 
-export const handler = async (event) => {
+export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
   const targetUrl = normalizeTargetUrl(event.rawPath || event.path || '/');
   if (!targetUrl) {
     return { statusCode: 400, body: 'A target URL is required in the path.' };
   }
 
   const proxyBase = buildProxyBase(event);
-  const executablePath = await chromium.executablePath();
+  const executablePath = await chromiumLib.executablePath();
   let browser;
 
   try {
-    browser = await puppeteer.launch({
-      args: chromium.args,
+    browser = await puppeteerLib.launch({
+      args: chromiumLib.args,
       executablePath,
-      headless: chromium.headless,
+      headless: chromiumLib.headless,
       defaultViewport: { width: 1280, height: 800 },
     });
 
@@ -157,3 +157,5 @@ export const handler = async (event) => {
     }
   }
 };
+
+export const handler = createHandler();
