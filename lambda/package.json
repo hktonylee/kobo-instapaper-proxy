@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/handler.js",
   "scripts": {
-    "build": "rm -rf dist && CHROMIUM_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --ignore-scripts && npx esbuild src/handler.js --bundle --minify --platform=node --format=esm --target=node20 --outfile=dist/src/handler.js --external:@sparticuz/chromium && node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.writeFileSync('dist/package.json',JSON.stringify({type:'module'},null,2));\""
+    "build": "rm -rf dist && CHROMIUM_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --ignore-scripts && npx esbuild src/handler.js --bundle --minify --platform=node --format=cjs --target=node20 --outfile=dist/src/handler.js --external:@sparticuz/chromium && node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.writeFileSync('dist/package.json',JSON.stringify({type:'commonjs'},null,2));\""
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
