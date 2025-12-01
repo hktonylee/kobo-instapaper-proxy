@@ -239,3 +239,31 @@ test('handler rejects unsupported protocols', async () => {
   assert.equal(response.body, 'Unsupported protocol: ftp:');
   assert.equal(launch.mock.calls.length, 0);
 });
+
+test('handler short-circuits favicon requests', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const { page } = createPageMocks();
+  const close = mock.fn(async () => {});
+
+  const launch = mock.fn(async () => ({
+    newPage: async () => page,
+    close,
+  }));
+
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
+
+  const response = await handler({
+    rawPath: '/favicon.ico',
+    headers: { host: 'proxy.test', 'x-forwarded-proto': 'https' },
+  });
+
+  assert.equal(response.statusCode, 204);
+  assert.equal(response.body, '');
+  assert.deepEqual(response.headers, { 'Cache-Control': 'no-store' });
+  assert.equal(launch.mock.calls.length, 0);
+});
