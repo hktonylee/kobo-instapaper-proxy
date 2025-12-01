@@ -100,6 +100,35 @@ test('handler keeps API gateway base path when rewriting links', async () => {
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
 });
 
+test('handler uses forwarded prefix header when base path is stripped before lambda', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const { page, goto, content } = createPageMocks({
+    content: mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><p>Content</p></article></body></html>'),
+  });
+  const close = mock.fn(async () => {});
+
+  const launch = mock.fn(async () => ({
+    newPage: async () => page,
+    close,
+  }));
+
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
+
+  const response = await handler({
+    rawPath: '/https://example.com/post',
+    headers: { host: 'proxy.test', 'x-forwarded-proto': 'https', 'x-forwarded-prefix': '/path1/path2' },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.match(response.body, /https:\/\/proxy\.test\/path1\/path2\/https:\/\/example\.com\/foo\?bar=baz/);
+  assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
+});
+
 test('assets keep their original URLs when readability parsing is unavailable', async (t) => {
   t.after(() => mock.restoreAll());
 
