@@ -3,6 +3,23 @@ import { mock, test } from 'node:test';
 import { Readability } from '@mozilla/readability';
 import { createHandler } from '../src/handler.js';
 
+const createPageMocks = ({ goto, content } = {}) => {
+  const gotoMock = goto ?? mock.fn(async () => {});
+  const contentMock = content ?? mock.fn(async () => '<html><body><p>Content</p></body></html>');
+  const setUserAgent = mock.fn(async () => {});
+  const setExtraHTTPHeaders = mock.fn(async () => {});
+  const evaluateOnNewDocument = mock.fn(async () => {});
+
+  return {
+    page: { goto: gotoMock, content: contentMock, setUserAgent, setExtraHTTPHeaders, evaluateOnNewDocument },
+    goto: gotoMock,
+    content: contentMock,
+    setUserAgent,
+    setExtraHTTPHeaders,
+    evaluateOnNewDocument,
+  };
+};
+
 test('handler renders article HTML and rewrites links for proxy usage', async () => {
   const chromiumLib = {
     executablePath: async () => '/opt/chromium',
@@ -10,12 +27,13 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
     headless: true,
   };
 
-  const goto = mock.fn(async () => {});
-  const content = mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><img href="/gallery" src="/images/photo.jpg" srcset="/images/photo.jpg 1x, /images/photo@2x.jpg 2x" alt="example" /><p>Content</p></article></body></html>');
+  const { page, goto, content, setUserAgent, setExtraHTTPHeaders, evaluateOnNewDocument } = createPageMocks({
+    content: mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><img href="/gallery" src="/images/photo.jpg" srcset="/images/photo.jpg 1x, /images/photo@2x.jpg 2x" alt="example" /><p>Content</p></article></body></html>'),
+  });
   const close = mock.fn(async () => {});
 
   const launch = mock.fn(async () => ({
-    newPage: async () => ({ goto, content }),
+    newPage: async () => page,
     close,
   }));
 
@@ -43,6 +61,12 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
   assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'networkidle0' });
 
+  assert.equal(setUserAgent.mock.calls.length, 1);
+  assert.equal(setUserAgent.mock.calls[0].arguments[0], 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');
+  assert.equal(setExtraHTTPHeaders.mock.calls.length, 1);
+  assert.deepEqual(setExtraHTTPHeaders.mock.calls[0].arguments[0], { 'Accept-Language': 'en-US,en;q=0.9' });
+  assert.equal(evaluateOnNewDocument.mock.calls.length, 1);
+
   assert.equal(content.mock.calls.length, 1);
   assert.equal(close.mock.calls.length, 1);
 });
@@ -54,12 +78,13 @@ test('handler keeps API gateway base path when rewriting links', async () => {
     headless: true,
   };
 
-  const goto = mock.fn(async () => {});
-  const content = mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><p>Content</p></article></body></html>');
+  const { page, goto, content } = createPageMocks({
+    content: mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><p>Content</p></article></body></html>'),
+  });
   const close = mock.fn(async () => {});
 
   const launch = mock.fn(async () => ({
-    newPage: async () => ({ goto, content }),
+    newPage: async () => page,
     close,
   }));
 
@@ -86,12 +111,13 @@ test('assets keep their original URLs when readability parsing is unavailable', 
     headless: true,
   };
 
-  const goto = mock.fn(async () => {});
-  const content = mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><img href="/gallery" src="/images/photo.jpg" srcset="/images/photo.jpg 1x, /images/photo@2x.jpg 2x" alt="example" /><p>Content</p></article></body></html>');
+  const { page, goto, content } = createPageMocks({
+    content: mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><img href="/gallery" src="/images/photo.jpg" srcset="/images/photo.jpg 1x, /images/photo@2x.jpg 2x" alt="example" /><p>Content</p></article></body></html>'),
+  });
   const close = mock.fn(async () => {});
 
   const launch = mock.fn(async () => ({
-    newPage: async () => ({ goto, content }),
+    newPage: async () => page,
     close,
   }));
 
@@ -115,12 +141,11 @@ test('handler normalizes single-slash https URLs', async () => {
     headless: true,
   };
 
-  const goto = mock.fn(async () => {});
-  const content = mock.fn(async () => '<html><body><p>Content</p></body></html>');
+  const { page, goto } = createPageMocks();
   const close = mock.fn(async () => {});
 
   const launch = mock.fn(async () => ({
-    newPage: async () => ({ goto, content }),
+    newPage: async () => page,
     close,
   }));
 
@@ -141,12 +166,11 @@ test('handler forwards query strings to the target URL', async () => {
     headless: true,
   };
 
-  const goto = mock.fn(async () => {});
-  const content = mock.fn(async () => '<html><body><p>Content</p></body></html>');
+  const { page, goto } = createPageMocks();
   const close = mock.fn(async () => {});
 
   const launch = mock.fn(async () => ({
-    newPage: async () => ({ goto, content }),
+    newPage: async () => page,
     close,
   }));
 
@@ -168,12 +192,11 @@ test('handler rejects unsupported protocols', async () => {
     headless: true,
   };
 
-  const goto = mock.fn(async () => {});
-  const content = mock.fn(async () => '<html><body><p>Content</p></body></html>');
+  const { page, goto } = createPageMocks();
   const close = mock.fn(async () => {});
 
   const launch = mock.fn(async () => ({
-    newPage: async () => ({ goto, content }),
+    newPage: async () => page,
     close,
   }));
 
