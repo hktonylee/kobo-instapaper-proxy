@@ -100,6 +100,25 @@ const buildProxyBase = (event, pathPrefix = '') => {
   return host ? `${protocol}://${host}${prefixSegment}` : '';
 };
 
+const logRequestMetadata = (event, { targetUrl, pathPrefix, proxyBase }) => {
+  const headers = event.headers || {};
+
+  console.info('Request URL metadata', {
+    targetUrl,
+    pathPrefix,
+    rawPath: event.rawPath || event.path,
+    rawQueryString: event.rawQueryString,
+    proxyBase,
+    forwarded: {
+      proto: headers['x-forwarded-proto'],
+      host: headers['x-forwarded-host'],
+      prefix: headers['x-forwarded-prefix'],
+      for: headers['x-forwarded-for'],
+    },
+    host: headers.host,
+  });
+};
+
 const resolveAndRewrite = (doc, proxyBase, originUrl) => {
   const makeAbsolute = (value) => {
     try {
@@ -173,6 +192,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
   }
 
   const proxyBase = buildProxyBase(event, pathPrefix);
+  logRequestMetadata(event, { targetUrl, pathPrefix, proxyBase });
   const executablePath = await chromiumLib.executablePath();
   let browser;
 
