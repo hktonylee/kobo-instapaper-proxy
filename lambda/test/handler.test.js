@@ -104,7 +104,7 @@ test('handler uses requestContext http path when rawPath excludes custom domain 
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
 });
 
-test('assets keep their original URLs when readability parsing is unavailable', async (t) => {
+test('assets keep their original URLs when readability parsing is unavailable', { concurrency: false }, async (t) => {
   const originalParse = Readability.prototype.parse;
   mock.method(Readability.prototype, 'parse', () => null);
   t.after(() => {
