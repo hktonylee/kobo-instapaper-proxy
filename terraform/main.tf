@@ -40,6 +40,7 @@ resource "aws_cloudwatch_log_group" "proxy_lambda" {
 }
 
 resource "aws_iam_role" "lambda_exec" {
+  # Keep permissions minimal since this function relies on an external Chromium layer.
   name = "kobo-instapaper-proxy-lambda-role"
 
   assume_role_policy = jsonencode({
