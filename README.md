@@ -1,47 +1,25 @@
 # Kobo Instapaper Proxy
 
-This project packages an AWS Lambda behind an Amazon API Gateway endpoint. It proxies article URLs, renders them with headless Chromium (via the `@sparticuz/chromium` Lambda layer and `puppeteer-core`), extracts the main article with Mozilla Readability, rewrites navigation links to route back through the proxy, and returns a lightweight HTML page suitable for Kobo or Instapaper reading while letting media load directly from the source.
+Read web articles on a Kobo or save them to Instapaper without the clutter. Point the proxy at any article link and it delivers a clean, light HTML page that feels native on e-ink readers.
 
-## Components
+## What it does (in plain English)
 
-- **Lambda** (`lambda/src/handler.js`): Navigates to a requested URL, renders it with `puppeteer-core` + `@sparticuz/chromium`, parses the readable article, rewrites navigation links to proxy through API Gateway, and returns a minimal HTML payload.
-- **API Gateway (HTTP API)**: Receives any path (e.g., `/https://www.example.com/news`) and forwards the request to the Lambda. The Lambda uses the path to determine which URL to fetch and render.
-- **Terraform**: Creates the Lambda, its IAM role, CloudWatch log group, HTTP API, default `$default` route, and the required invocation permission. Uses an S3 backend for state.
+- Fetches the article for you and strips away pop-ups, banners, and sidebars so you can focus on the words.
+- Keeps images and media loading directly from the original site so pages stay small and quick.
+- Rewrites links so you can keep tapping through an article series without leaving the proxy.
 
-## Getting started
+## How to use it
 
-1. **Build the Lambda artifact** (produces a single minified `lambda/dist/src/handler.js` bundle without shipping `node_modules`). The build disables Chromium downloads because the binary is supplied by a Lambda layer and bundles all other dependencies into the handler:
-   ```bash
-   cd lambda
-   npm run build
-   cd ..
+1. Deploy the proxy to your own AWS account (there is a ready-made setup included).
+2. Copy the "invoke URL" the setup prints when it finishes.
+3. When you want to read something, take any article link and stick it after that URL, for example:
    ```
-
-2. **Provide backend configuration** (kept out of version control):
-   ```hcl
-   # terraform/backend.hcl (do not commit)
-   bucket  = "<your-state-bucket>"
-   key     = "<your-state-key>"
-   region  = "<your-region>"
-   encrypt = true
+   https://<your-invoke-url>/https://www.example.com/news
    ```
+4. Load that combined link on your Kobo or send it to Instapaper. You'll get a reader-friendly version of the article.
 
-3. **Initialize and deploy with Terraform**. By default, the Terraform module will attach the pinned `@sparticuz/chromium` layer release `arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:50` (resolved for your chosen region). If you want to override it with a specific layer ARN, pass `-var "chromium_layer_arn=<your-layer-arn>"`.
-   ```bash
-   cd terraform
-   terraform init -backend-config=backend.hcl
-   terraform apply
-   ```
+If you just want to read, that's all you need to know. If you're curious about how the proxy is built or want to tweak it, check out the technical guide below.
 
-   Ensure the backend bucket/key exist, your AWS credentials are configured, and that your AWS account can access the public `@sparticuz/chromium` layer (account `764866452798`). If you need to pin a specific version or use a custom layer, provide its ARN via `chromium_layer_arn`. See [@sparticuz/chromium releases](https://github.com/Sparticuz/chromium#aws-lambda-layer) for the latest ARNs.
+## Want the technical details?
 
-4. **Invoke**: After apply, Terraform outputs `invoke_url`. Append an encoded URL path to use the proxy, such as:
-   ```
-   https://<invoke_url>/https://www.example.com/news
-   ```
-
-## Notes
-
-- The Lambda uses headless Chromium from a Lambda layer (`@sparticuz/chromium`) with `puppeteer-core`. The build command skips downloading Chromium to keep the deployment package small; the executable is provided by the layer.
-- Links in the extracted article are rewritten to call back through the API Gateway host so that navigation stays within the proxy, while media assets load directly from their original hosts.
-- The HTML response is intentionally minimal to work well on Kobo devices and for saving to Instapaper.
+Everything about how it works under the hood—build steps, AWS resources, and configuration options—is in [TECHNICAL.md](TECHNICAL.md).
