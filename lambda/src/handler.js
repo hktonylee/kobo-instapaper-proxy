@@ -68,6 +68,8 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
 
   const toProxy = (absoluteUrl) => `${proxyBase}/${encodeURI(absoluteUrl)}`;
 
+  const assetTags = new Set(['img', 'picture', 'source', 'video', 'audio', 'track', 'iframe', 'embed', 'object', 'script', 'link']);
+
   const elements = doc.querySelectorAll('[href], [src]');
   elements.forEach((element) => {
     const attribute = element.hasAttribute('href') ? 'href' : 'src';
@@ -80,7 +82,10 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
     const absolute = makeAbsolute(value);
     if (!absolute) return;
 
-    element.setAttribute(attribute, toProxy(absolute));
+    const tag = element.tagName.toLowerCase();
+    const shouldProxy = !assetTags.has(tag);
+
+    element.setAttribute(attribute, shouldProxy ? toProxy(absolute) : absolute);
   });
 
   const srcsetElements = doc.querySelectorAll('[srcset]');
@@ -91,7 +96,7 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
       .map((part) => {
         const [url, descriptor] = part.split(/\s+/, 2);
         const absolute = makeAbsolute(url);
-        return absolute ? `${toProxy(absolute)}${descriptor ? ` ${descriptor}` : ''}` : null;
+        return absolute ? `${absolute}${descriptor ? ` ${descriptor}` : ''}` : null;
       })
       .filter(Boolean);
 
