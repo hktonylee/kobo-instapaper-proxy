@@ -59,7 +59,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
 
   assert.equal(goto.mock.calls.length, 1);
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
-  assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'networkidle0' });
+  assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'networkidle2' });
 
   assert.equal(setUserAgent.mock.calls.length, 1);
   assert.equal(setUserAgent.mock.calls[0].arguments[0], 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');
