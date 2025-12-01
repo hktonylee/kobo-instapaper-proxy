@@ -102,10 +102,10 @@ resource "aws_lambda_function" "proxy" {
     }
   }
 
-  depends_on = concat(
-    [aws_iam_role_policy_attachment.lambda_basic],
-    aws_iam_role_policy.cookie_jar_read[*]
-  )
+  depends_on = [
+    aws_iam_role_policy_attachment.lambda_basic,
+    aws_iam_role_policy.cookie_jar_read,
+  ]
 }
 
 resource "aws_apigatewayv2_api" "proxy" {
