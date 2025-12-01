@@ -80,7 +80,7 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
     if (UNSUPPORTED_PROTOCOLS.includes(`${protocol}:`)) return;
 
     const tag = element.tagName.toLowerCase();
-    if (assetTags.has(tag)) return;
+    if (attribute === 'src' && assetTags.has(tag)) return;
 
     const absolute = makeAbsolute(value);
     if (!absolute) return;
