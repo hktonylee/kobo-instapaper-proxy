@@ -10,7 +10,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   };
 
   const goto = mock.fn(async () => {});
-  const content = mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><p>Content</p></article></body></html>');
+  const content = mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><img src="/images/photo.jpg" srcset="/images/photo.jpg 1x, /images/photo@2x.jpg 2x" alt="example" /><p>Content</p></article></body></html>');
   const close = mock.fn(async () => {});
 
   const launch = mock.fn(async () => ({
@@ -28,6 +28,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.equal(response.statusCode, 200);
   assert.match(response.body, /Example Article/);
   assert.match(response.body, /https:\/\/proxy\.test\/https:\/\/example\.com\/foo\?bar=baz/);
+  assert.match(response.body, /<img src="https:\/\/example\.com\/images\/photo.jpg" srcset="https:\/\/example\.com\/images\/photo.jpg 1x, https:\/\/example\.com\/images\/photo@2x.jpg 2x" alt="example">/);
 
   assert.equal(launch.mock.calls.length, 1);
   const launchArgs = launch.mock.calls[0].arguments[0];
