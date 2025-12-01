@@ -4,7 +4,7 @@ import { buildArticleHtml } from './html.js';
 import { resolveAndRewrite } from './dom.js';
 
 export const renderReadablePage = (pageContent, targetUrl, proxyBase) => {
-  const dom = new JSDOM(pageContent, { url: targetUrl });
+  const dom = new JSDOM(pageContent, { url: targetUrl, runScripts: 'dangerously' });
   const article = new Readability(dom.window.document).parse();
 
   const contentHtml = article?.content || dom.window.document.body.innerHTML;
