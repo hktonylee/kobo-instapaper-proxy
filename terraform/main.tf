@@ -73,7 +73,7 @@ resource "aws_lambda_function" "proxy" {
   layers = [local.chromium_layer]
 
   memory_size = 1536
-  timeout     = 30
+  timeout     = 15
 
   environment {
     variables = {
