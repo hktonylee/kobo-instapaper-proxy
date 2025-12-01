@@ -81,12 +81,21 @@ const normalizeTargetUrl = (rawPath = '') => {
   return { targetUrl, pathPrefix };
 };
 
+const normalizePrefix = (value = '') => value.replace(/^\/+|\/+$/g, '');
+
 const buildProxyBase = (event, pathPrefix = '') => {
   const protocol = event.headers?.['x-forwarded-proto'] || 'https';
   const host = event.headers?.host || '';
 
-  const normalizedPrefix = pathPrefix.replace(/^\/+|\/+$/g, '');
-  const prefixSegment = normalizedPrefix ? `/${normalizedPrefix}` : '';
+  const combinedPrefixes = [
+    event.headers?.['x-forwarded-prefix'],
+    pathPrefix,
+  ]
+    .map(normalizePrefix)
+    .filter(Boolean)
+    .join('/');
+
+  const prefixSegment = combinedPrefixes ? `/${combinedPrefixes}` : '';
 
   return host ? `${protocol}://${host}${prefixSegment}` : '';
 };
