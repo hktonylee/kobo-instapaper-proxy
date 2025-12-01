@@ -240,6 +240,32 @@ test('handler rejects unsupported protocols', async () => {
   assert.equal(launch.mock.calls.length, 0);
 });
 
+test('handler requires http(s) protocol in the path', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const { page, goto } = createPageMocks();
+  const close = mock.fn(async () => {});
+
+  const launch = mock.fn(async () => ({
+    newPage: async () => page,
+    close,
+  }));
+
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
+
+  const response = await handler({
+    rawPath: '/robots.txt',
+  });
+
+  assert.equal(response.statusCode, 400);
+  assert.equal(response.body, 'A fully-qualified http(s) URL is required in the path.');
+  assert.equal(launch.mock.calls.length, 0);
+});
+
 test('handler short-circuits favicon requests', async () => {
   const chromiumLib = {
     executablePath: async () => '/opt/chromium',

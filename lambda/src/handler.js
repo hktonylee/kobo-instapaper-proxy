@@ -59,6 +59,10 @@ const normalizeTargetUrl = (rawPath = '') => {
   const decoded = decodeURIComponent(trimmed);
 
   const protocolMatch = decoded.match(/([a-z][a-z0-9+.-]*:\/+)/i);
+  if (!protocolMatch) {
+    throw new Error('A fully-qualified http(s) URL is required in the path.');
+  }
+
   const protocolIndex = protocolMatch?.index ?? -1;
   const pathPrefix = protocolIndex > 0 ? decoded.slice(0, protocolIndex).replace(/\/+$/, '') : '';
   const candidate = protocolIndex > -1 ? decoded.slice(protocolIndex) : decoded;
