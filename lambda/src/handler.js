@@ -77,7 +77,8 @@ const parseCookieJar = (rawBody) => {
 
     lines.forEach((line) => {
       const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) return;
+      const isHttpOnlyLine = trimmed.startsWith('#HttpOnly_');
+      if (!trimmed || (trimmed.startsWith('#') && !isHttpOnlyLine)) return;
 
       const fields = trimmed.split('\t');
       if (fields.length < 7) return;
