@@ -173,10 +173,15 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
 };
 
 export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
+  const rawPath = event.rawPath || event.path || '/';
+  const lowerCasePath = rawPath.toLowerCase();
+  if (lowerCasePath === '/favicon.ico' || lowerCasePath.endsWith('/favicon.ico')) {
+    return { statusCode: 204, headers: { 'Cache-Control': 'no-store' }, body: '' };
+  }
+
   let targetUrl;
   let pathPrefix = '';
   try {
-    const rawPath = event.rawPath || event.path || '/';
     const rawQueryString = event.rawQueryString || '';
     const rawTarget = rawQueryString ? `${rawPath}?${rawQueryString}` : rawPath;
 
