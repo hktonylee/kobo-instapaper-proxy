@@ -9,3 +9,15 @@ variable "chromium_layer_arn" {
   type        = string
   default     = ""
 }
+
+variable "cookie_jar_bucket" {
+  description = "S3 bucket that stores a JSON cookie jar to preload into the browser session."
+  type        = string
+  default     = ""
+}
+
+variable "cookie_jar_key" {
+  description = "S3 object key for the JSON cookie jar."
+  type        = string
+  default     = ""
+}

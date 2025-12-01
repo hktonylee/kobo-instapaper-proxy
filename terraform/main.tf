@@ -21,6 +21,7 @@ provider "aws" {
 locals {
   lambda_package = "${path.module}/../lambda/build/lambda.zip"
   chromium_layer = var.chromium_layer_arn != "" ? var.chromium_layer_arn : data.aws_lambda_layer_version.chromium.arn
+  has_cookie_jar = var.cookie_jar_bucket != "" && var.cookie_jar_key != ""
 }
 
 data "aws_lambda_layer_version" "chromium" {
@@ -61,6 +62,24 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy" "cookie_jar_read" {
+  count = local.has_cookie_jar ? 1 : 0
+
+  name = "kobo-instapaper-proxy-cookie-jar"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:GetObject"]
+        Resource = "arn:aws:s3:::${var.cookie_jar_bucket}/${var.cookie_jar_key}"
+      }
+    ]
+  })
+}
+
 resource "aws_lambda_function" "proxy" {
   function_name = "kobo-instapaper-proxy"
   filename      = data.archive_file.lambda.output_path
@@ -77,11 +96,16 @@ resource "aws_lambda_function" "proxy" {
 
   environment {
     variables = {
-      NODE_OPTIONS = "--enable-source-maps"
+      NODE_OPTIONS        = "--enable-source-maps"
+      COOKIE_JAR_S3_BUCKET = var.cookie_jar_bucket
+      COOKIE_JAR_S3_KEY    = var.cookie_jar_key
     }
   }
 
-  depends_on = [aws_iam_role_policy_attachment.lambda_basic]
+  depends_on = concat(
+    [aws_iam_role_policy_attachment.lambda_basic],
+    aws_iam_role_policy.cookie_jar_read[*]
+  )
 }
 
 resource "aws_apigatewayv2_api" "proxy" {

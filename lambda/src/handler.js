@@ -2,6 +2,7 @@ import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
 import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 const MINIMAL_STYLES = `
   body { font-family: 'Georgia', 'Times New Roman', serif; margin: 1.5rem auto; max-width: 740px; padding: 0 1rem; background: #f9f9f9; color: #222; }
@@ -22,6 +23,8 @@ const MINIMAL_STYLES = `
 const UNSUPPORTED_PROTOCOLS = ['javascript:', 'data:', 'mailto:', 'tel:'];
 
 const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+
+const s3Client = new S3Client();
 
 const applyStealthTweaks = async (page) => {
   await page.setUserAgent(DEFAULT_USER_AGENT);
@@ -51,6 +54,80 @@ const escapeHtml = (value = '') => value
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
+
+const readStreamToString = async (stream) => {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  }
+
+  return Buffer.concat(chunks).toString('utf-8');
+};
+
+const parseCookieJar = (rawBody) => {
+  try {
+    const parsed = JSON.parse(rawBody);
+    if (!Array.isArray(parsed)) {
+      throw new Error('Cookie jar must be a JSON array');
+    }
+    return parsed;
+  } catch (jsonError) {
+    const cookies = [];
+    const lines = rawBody.split(/\r?\n/);
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) return;
+
+      const fields = trimmed.split('\t');
+      if (fields.length < 7) return;
+
+      let [domain, , path, secureFlag, expires, name, value] = fields;
+      const httpOnly = domain.startsWith('#HttpOnly_');
+      domain = domain.replace(/^#HttpOnly_/, '');
+
+      cookies.push({
+        name,
+        value,
+        domain,
+        path,
+        secure: secureFlag?.toUpperCase() === 'TRUE',
+        httpOnly,
+        expires: Number(expires) || undefined,
+      });
+    });
+
+    if (cookies.length === 0) {
+      throw new Error('Cookie jar must be a JSON array or Netscape HTTP cookie file');
+    }
+
+    return cookies;
+  }
+};
+
+const loadCookieJar = async () => {
+  const bucket = process.env.COOKIE_JAR_S3_BUCKET;
+  const key = process.env.COOKIE_JAR_S3_KEY;
+
+  if (!bucket || !key) return [];
+
+  try {
+    const response = await s3Client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    if (!response.Body) {
+      throw new Error('S3 object returned an empty body');
+    }
+
+    const body = await readStreamToString(response.Body);
+    return parseCookieJar(body);
+  } catch (error) {
+    console.warn('Unable to load cookie jar; continuing without cookies', {
+      bucket,
+      key,
+      error: error.message,
+    });
+    return [];
+  }
+};
 
 const normalizeTargetUrl = (rawPath = '') => {
   const trimmed = rawPath.replace(/^\/+/, '');
@@ -206,6 +283,10 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
 
     const page = await browser.newPage();
     await applyStealthTweaks(page);
+    const cookies = await loadCookieJar();
+    if (cookies.length > 0) {
+      await page.setCookie(...cookies);
+    }
     await page.goto(targetUrl, { waitUntil: 'networkidle0' });
     const pageContent = await page.content();
 

@@ -33,6 +33,15 @@ This project packages an AWS Lambda behind an Amazon API Gateway endpoint. It pr
    terraform apply
    ```
 
+   To preload authenticated sessions, store a Puppeteer/Chrome-style cookie jar JSON **or** a Netscape HTTP cookie file (as
+   exported by many browsers) in S3 and provide its location:
+
+   ```bash
+   terraform apply \
+     -var "cookie_jar_bucket=<bucket>" \
+     -var "cookie_jar_key=<path/to/cookies.json>"
+   ```
+
    Ensure the backend bucket/key exist, your AWS credentials are configured, and that your AWS account can access the public `@sparticuz/chromium` layer (account `764866452798`). If you need to pin a specific version or use a custom layer, provide its ARN via `chromium_layer_arn`. See [@sparticuz/chromium releases](https://github.com/Sparticuz/chromium#aws-lambda-layer) for the latest ARNs.
 
 4. **Invoke**: After apply, Terraform outputs `invoke_url`. Append an encoded URL path to use the proxy, such as:
