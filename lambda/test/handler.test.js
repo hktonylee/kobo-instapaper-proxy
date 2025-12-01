@@ -47,6 +47,34 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.equal(close.mock.calls.length, 1);
 });
 
+test('handler keeps API gateway base path when rewriting links', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const goto = mock.fn(async () => {});
+  const content = mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><p>Content</p></article></body></html>');
+  const close = mock.fn(async () => {});
+
+  const launch = mock.fn(async () => ({
+    newPage: async () => ({ goto, content }),
+    close,
+  }));
+
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
+
+  const response = await handler({
+    rawPath: '/path1/path2/https://example.com/post',
+    headers: { host: 'proxy.test', 'x-forwarded-proto': 'https' },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.match(response.body, /https:\/\/proxy\.test\/path1\/path2\/https:\/\/example\.com\/foo\?bar=baz/);
+  assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
+});
+
 test('assets keep their original URLs when readability parsing is unavailable', async (t) => {
   t.after(() => mock.restoreAll());
 

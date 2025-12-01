@@ -30,30 +30,41 @@ const escapeHtml = (value = '') => value
 
 const normalizeTargetUrl = (rawPath = '') => {
   const trimmed = rawPath.replace(/^\/+/, '');
-  if (!trimmed) return null;
+  if (!trimmed) return { targetUrl: null, pathPrefix: '' };
 
   const decoded = decodeURIComponent(trimmed);
-  const withNormalizedProtocolSlashes = decoded.replace(/^(https?:)\/(?!\/)/i, '$1//');
 
-  const protocolMatch = withNormalizedProtocolSlashes.match(/^([a-z][a-z0-9+.-]*:)/i);
-  if (protocolMatch) {
-    const protocol = protocolMatch[1].toLowerCase();
+  const protocolMatch = decoded.match(/([a-z][a-z0-9+.-]*:\/+)/i);
+  const protocolIndex = protocolMatch?.index ?? -1;
+  const pathPrefix = protocolIndex > 0 ? decoded.slice(0, protocolIndex).replace(/\/+$/, '') : '';
+  const candidate = protocolIndex > -1 ? decoded.slice(protocolIndex) : decoded;
+
+  const withNormalizedProtocolSlashes = candidate.replace(/^(https?:)\/(?!\/)/i, '$1//');
+
+  const protocolSchemeMatch = withNormalizedProtocolSlashes.match(/^([a-z][a-z0-9+.-]*:)/i);
+  if (protocolSchemeMatch) {
+    const protocol = protocolSchemeMatch[1].toLowerCase();
     if (protocol !== 'http:' && protocol !== 'https:') {
       throw new Error(`Unsupported protocol: ${protocol}`);
     }
   }
 
-  if (withNormalizedProtocolSlashes.startsWith('http://') || withNormalizedProtocolSlashes.startsWith('https://')) {
-    return withNormalizedProtocolSlashes;
-  }
+  const targetUrl = withNormalizedProtocolSlashes.startsWith('http://')
+    || withNormalizedProtocolSlashes.startsWith('https://')
+    ? withNormalizedProtocolSlashes
+    : `https://${withNormalizedProtocolSlashes}`;
 
-  return `https://${withNormalizedProtocolSlashes}`;
+  return { targetUrl, pathPrefix };
 };
 
-const buildProxyBase = (event) => {
+const buildProxyBase = (event, pathPrefix = '') => {
   const protocol = event.headers?.['x-forwarded-proto'] || 'https';
   const host = event.headers?.host || '';
-  return host ? `${protocol}://${host}` : '';
+
+  const normalizedPrefix = pathPrefix.replace(/^\/+|\/+$/g, '');
+  const prefixSegment = normalizedPrefix ? `/${normalizedPrefix}` : '';
+
+  return host ? `${protocol}://${host}${prefixSegment}` : '';
 };
 
 const resolveAndRewrite = (doc, proxyBase, originUrl) => {
@@ -111,12 +122,15 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
 
 export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
   let targetUrl;
+  let pathPrefix = '';
   try {
     const rawPath = event.rawPath || event.path || '/';
     const rawQueryString = event.rawQueryString || '';
     const rawTarget = rawQueryString ? `${rawPath}?${rawQueryString}` : rawPath;
 
-    targetUrl = normalizeTargetUrl(rawTarget);
+    const normalized = normalizeTargetUrl(rawTarget);
+    targetUrl = normalized.targetUrl;
+    pathPrefix = normalized.pathPrefix;
   } catch (error) {
     return { statusCode: 400, body: error.message };
   }
@@ -125,7 +139,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
     return { statusCode: 400, body: 'A target URL is required in the path.' };
   }
 
-  const proxyBase = buildProxyBase(event);
+  const proxyBase = buildProxyBase(event, pathPrefix);
   const executablePath = await chromiumLib.executablePath();
   let browser;
 
