@@ -57,6 +57,17 @@ const normalizeTargetUrl = (rawPath = '') => {
   return { targetUrl, pathPrefix };
 };
 
+const pickRequestPath = (event = {}) => {
+  const pathCandidates = [
+    event.requestContext?.http?.path,
+    event.rawPath,
+    event.path,
+    '/',
+  ];
+
+  return pathCandidates.find((candidate) => candidate && typeof candidate === 'string') || '/';
+};
+
 const buildProxyBase = (event, pathPrefix = '') => {
   const protocol = event.headers?.['x-forwarded-proto'] || 'https';
   const host = event.headers?.host || '';
@@ -124,7 +135,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
   let targetUrl;
   let pathPrefix = '';
   try {
-    const rawPath = event.rawPath || event.path || '/';
+    const rawPath = pickRequestPath(event);
     const rawQueryString = event.rawQueryString || '';
     const rawTarget = rawQueryString ? `${rawPath}?${rawQueryString}` : rawPath;
 
