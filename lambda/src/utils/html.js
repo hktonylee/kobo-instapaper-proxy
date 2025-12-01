@@ -33,7 +33,6 @@ export const buildWelcomePage = (proxyBase) => `<!doctype html>
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; background: #f6f8fb; color: #1f2933; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
     .card { background: #fff; padding: 1.75rem; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); width: min(560px, 92vw); }
     h1 { font-size: 1.8rem; margin: 0 0 0.35rem; }
-    p { margin: 0 0 1rem; color: #4b5563; line-height: 1.5; }
     form { display: flex; gap: 0.6rem; margin-top: 0.75rem; }
     input[type="search"] { flex: 1; padding: 0.85rem 1rem; border: 1px solid #d4d8dd; border-radius: 12px; font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
     input[type="search"]:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18); }
@@ -44,7 +43,6 @@ export const buildWelcomePage = (proxyBase) => `<!doctype html>
 <body>
   <main class="card" aria-labelledby="welcome-title">
     <h1 id="welcome-title">Welcome</h1>
-    <p>Use the box below to search with DuckDuckGo. Results will open through this proxy so links stay readable.</p>
     <form action="${proxyBase || ''}/https://duckduckgo.com/" method="get">
       <input type="search" name="q" placeholder="Search DuckDuckGo" required />
       <button type="submit">Search</button>
