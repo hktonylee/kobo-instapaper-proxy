@@ -79,17 +79,20 @@ const resolveAndRewrite = (doc, proxyBase, originUrl) => {
     const protocol = value.split(':')[0].toLowerCase();
     if (UNSUPPORTED_PROTOCOLS.includes(`${protocol}:`)) return;
 
+    const tag = element.tagName.toLowerCase();
+    if (attribute === 'src' && assetTags.has(tag)) return;
+
     const absolute = makeAbsolute(value);
     if (!absolute) return;
 
-    const tag = element.tagName.toLowerCase();
-    const shouldProxy = !assetTags.has(tag);
-
-    element.setAttribute(attribute, shouldProxy ? toProxy(absolute) : absolute);
+    element.setAttribute(attribute, toProxy(absolute));
   });
 
   const srcsetElements = doc.querySelectorAll('[srcset]');
   srcsetElements.forEach((element) => {
+    const tag = element.tagName.toLowerCase();
+    if (assetTags.has(tag)) return;
+
     const entries = element.getAttribute('srcset')
       ?.split(',')
       .map((part) => part.trim())
