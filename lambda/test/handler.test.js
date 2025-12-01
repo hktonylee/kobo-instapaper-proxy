@@ -105,9 +105,11 @@ test('handler uses requestContext http path when rawPath excludes custom domain 
 });
 
 test('assets keep their original URLs when readability parsing is unavailable', async (t) => {
-  t.after(() => mock.restoreAll());
-
+  const originalParse = Readability.prototype.parse;
   mock.method(Readability.prototype, 'parse', () => null);
+  t.after(() => {
+    Readability.prototype.parse = originalParse;
+  });
 
   const chromiumLib = {
     executablePath: async () => '/opt/chromium',
