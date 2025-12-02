@@ -6,14 +6,23 @@ import { createHandler } from '../src/handler.js';
 const createPageMocks = ({ goto, content } = {}) => {
   const gotoMock = goto ?? mock.fn(async () => {});
   const contentMock = content ?? mock.fn(async () => '<html><body><p>Content</p></body></html>');
+  const setDefaultNavigationTimeout = mock.fn(() => {});
   const setUserAgent = mock.fn(async () => {});
   const setExtraHTTPHeaders = mock.fn(async () => {});
   const evaluateOnNewDocument = mock.fn(async () => {});
 
   return {
-    page: { goto: gotoMock, content: contentMock, setUserAgent, setExtraHTTPHeaders, evaluateOnNewDocument },
+    page: {
+      goto: gotoMock,
+      content: contentMock,
+      setDefaultNavigationTimeout,
+      setUserAgent,
+      setExtraHTTPHeaders,
+      evaluateOnNewDocument,
+    },
     goto: gotoMock,
     content: contentMock,
+    setDefaultNavigationTimeout,
     setUserAgent,
     setExtraHTTPHeaders,
     evaluateOnNewDocument,
@@ -27,7 +36,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
     headless: true,
   };
 
-  const { page, goto, content, setUserAgent, setExtraHTTPHeaders, evaluateOnNewDocument } = createPageMocks({
+  const { page, goto, content, setDefaultNavigationTimeout, setUserAgent, setExtraHTTPHeaders, evaluateOnNewDocument } = createPageMocks({
     content: mock.fn(async () => '<html><head><title>Example Article</title></head><body><article><a href="/foo?bar=baz">read more</a><img href="/gallery" src="/images/photo.jpg" srcset="/images/photo.jpg 1x, /images/photo@2x.jpg 2x" alt="example" /><p>Content</p></article></body></html>'),
   });
   const close = mock.fn(async () => {});
@@ -57,6 +66,8 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.equal(launchArgs.headless, true);
   assert.deepEqual(launchArgs.defaultViewport, { width: 1280, height: 800 });
 
+  assert.equal(setDefaultNavigationTimeout.mock.calls.length, 1);
+  assert.deepEqual(setDefaultNavigationTimeout.mock.calls[0].arguments, [14000]);
   assert.equal(goto.mock.calls.length, 1);
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
   assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'networkidle2' });
