@@ -60,7 +60,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
       await page.goto(targetUrl, { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
       console.info('Navigation complete');
       console.info('Waiting for network idle');
-      await page.waitForNetworkIdle({ idleTime: 5000, concurrency: 3 });
+      await page.waitForNetworkIdle({ idleTime: 1500, timeout: 3000, concurrency: 3 });
       console.info('Network idle detected, extracting content');
       return page.content();
     });
