@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import puppeteer from 'puppeteer';
 import { createHandler } from './handler.js';
 
 const USAGE = `Usage: npm run cli -- <url> [--output <file>] [--host <host>] [--proto <http|https>] [--prefix <basePath>]
@@ -47,14 +46,14 @@ const parseArgs = (argv) => {
   return args;
 };
 
-const createLocalChromiumLib = () => ({
+const createLocalChromiumLib = (puppeteerLib) => ({
   args: [],
   headless: true,
-  executablePath: async () => puppeteer.executablePath(),
+  executablePath: async () => puppeteerLib.executablePath(),
 });
 
-const buildEvent = ({ url, host, proto, prefix }) => ({
-  rawPath: `/${encodeURIComponent(url)}`,
+export const buildEvent = ({ url, host, proto, prefix }) => ({
+  rawPath: url.startsWith('/') ? url : `/${url}`,
   rawQueryString: '',
   headers: {
     host,
@@ -74,6 +73,16 @@ const writeOutput = async ({ body, output }) => {
   console.info(`Saved rendered HTML to ${outputPath}`);
 };
 
+const isDirectRun = () => {
+  const entry = process.argv[1];
+
+  if (!entry) {
+    return false;
+  }
+
+  return new URL(`file://${path.resolve(entry)}`).href === import.meta.url;
+};
+
 const main = async () => {
   try {
     const { url, output, host, proto, prefix, help } = parseArgs(process.argv.slice(2));
@@ -84,7 +93,8 @@ const main = async () => {
       return;
     }
 
-    const handler = createHandler({ chromiumLib: createLocalChromiumLib(), puppeteerLib: puppeteer });
+    const { default: puppeteerLib } = await import('puppeteer');
+    const handler = createHandler({ chromiumLib: createLocalChromiumLib(puppeteerLib), puppeteerLib });
     const response = await handler(buildEvent({ url, host, proto, prefix }));
 
     if (response.statusCode !== 200) {
@@ -100,4 +110,6 @@ const main = async () => {
   }
 };
 
-await main();
+if (isDirectRun()) {
+  await main();
+}
