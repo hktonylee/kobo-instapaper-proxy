@@ -7,7 +7,8 @@
   "scripts": {
     "build": "rm -rf dist && CHROMIUM_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --ignore-scripts && node ./scripts/build.js",
     "test": "node --test",
-    "cli": "node src/cli.js"
+    "cli": "node src/cli.js",
+    "install-browser": "npx @puppeteer/browsers install chrome@stable && echo 'Copy the downloaded chrome to the Puppeteer cache folder so puppeteer-core can find it.'"
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
