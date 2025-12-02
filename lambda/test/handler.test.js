@@ -67,7 +67,8 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.deepEqual(launchArgs.defaultViewport, { width: 1280, height: 800 });
 
   assert.equal(setDefaultNavigationTimeout.mock.calls.length, 1);
-  assert.deepEqual(setDefaultNavigationTimeout.mock.calls[0].arguments, [14000]);
+  const expectedNavigationTimeoutMs = 15000 - 3000;
+  assert.deepEqual(setDefaultNavigationTimeout.mock.calls[0].arguments, [expectedNavigationTimeoutMs]);
   assert.equal(goto.mock.calls.length, 1);
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
   assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'networkidle2' });
