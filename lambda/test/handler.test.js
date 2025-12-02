@@ -7,6 +7,7 @@ const createPageMocks = ({ goto, content } = {}) => {
   const gotoMock = goto ?? mock.fn(async () => {});
   const contentMock = content ?? mock.fn(async () => '<html><body><p>Content</p></body></html>');
   const setDefaultNavigationTimeout = mock.fn(() => {});
+  const waitForNetworkIdle = mock.fn(async () => {});
   const setUserAgent = mock.fn(async () => {});
   const setExtraHTTPHeaders = mock.fn(async () => {});
   const evaluateOnNewDocument = mock.fn(async () => {});
@@ -16,6 +17,7 @@ const createPageMocks = ({ goto, content } = {}) => {
       goto: gotoMock,
       content: contentMock,
       setDefaultNavigationTimeout,
+      waitForNetworkIdle,
       setUserAgent,
       setExtraHTTPHeaders,
       evaluateOnNewDocument,
@@ -23,6 +25,7 @@ const createPageMocks = ({ goto, content } = {}) => {
     goto: gotoMock,
     content: contentMock,
     setDefaultNavigationTimeout,
+    waitForNetworkIdle,
     setUserAgent,
     setExtraHTTPHeaders,
     evaluateOnNewDocument,
@@ -67,11 +70,12 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.deepEqual(launchArgs.defaultViewport, { width: 1280, height: 800 });
 
   assert.equal(setDefaultNavigationTimeout.mock.calls.length, 1);
-  const expectedNavigationTimeoutMs = 15000 - 3000;
-  assert.deepEqual(setDefaultNavigationTimeout.mock.calls[0].arguments, [expectedNavigationTimeoutMs]);
+  assert.deepEqual(setDefaultNavigationTimeout.mock.calls[0].arguments, [0]);
   assert.equal(goto.mock.calls.length, 1);
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
-  assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'networkidle2' });
+  assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'load' });
+  assert.equal(page.waitForNetworkIdle.mock.calls.length, 1);
+  assert.deepEqual(page.waitForNetworkIdle.mock.calls[0].arguments, [{ idleTime: 5000 }]);
 
   assert.equal(setUserAgent.mock.calls.length, 1);
   assert.equal(setUserAgent.mock.calls[0].arguments[0], 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');

@@ -48,7 +48,8 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
 
   try {
     const pageContent = await withPage(chromiumLib, puppeteerLib, async (page) => {
-      await page.goto(targetUrl, { waitUntil: 'networkidle2' });
+      await page.goto(targetUrl, { waitUntil: 'load' });
+      await page.waitForNetworkIdle({ idleTime: 5000 });
       return page.content();
     });
 
