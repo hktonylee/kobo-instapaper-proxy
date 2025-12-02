@@ -4,6 +4,7 @@ import { withPage } from './utils/browser.js';
 import { buildWelcomePage } from './utils/html.js';
 import { renderReadablePage } from './utils/readable.js';
 import { buildProxyBase, logRequestMetadata, normalizeTargetUrl } from './utils/request.js';
+import { NAVIGATION_TIMEOUT_MS } from './utils/constants.js';
 
 export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
   const rawPath = event.rawPath || event.path || '/';
@@ -48,7 +49,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
 
   try {
     const pageContent = await withPage(chromiumLib, puppeteerLib, async (page) => {
-      await page.goto(targetUrl, { waitUntil: 'load' });
+      await page.goto(targetUrl, { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
       await page.waitForNetworkIdle({ idleTime: 5000 });
       return page.content();
     });
