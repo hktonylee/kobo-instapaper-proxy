@@ -27,14 +27,17 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
     const rawQueryString = event.rawQueryString || '';
     const rawTarget = rawQueryString ? `${rawPath}?${rawQueryString}` : rawPath;
 
+    console.info('Normalizing target URL', { rawTarget });
     const normalized = normalizeTargetUrl(rawTarget);
     targetUrl = normalized.targetUrl;
     pathPrefix = normalized.pathPrefix;
+    console.info('Normalized target URL', { targetUrl, pathPrefix });
   } catch (error) {
     return { statusCode: 400, body: error.message };
   }
 
   const proxyBase = buildProxyBase(event, pathPrefix);
+  console.info('Computed proxy base', { proxyBase });
 
   if (!targetUrl) {
     const welcomeHtml = buildWelcomePage(proxyBase);
@@ -53,8 +56,12 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
 
   try {
     const pageContent = await withPage(chromiumLib, puppeteerLib, async (page) => {
+      console.info('Navigating to target URL', { targetUrl, timeout: NAVIGATION_TIMEOUT_MS });
       await page.goto(targetUrl, { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
+      console.info('Navigation complete');
+      console.info('Waiting for network idle');
       await page.waitForNetworkIdle({ idleTime: 5000, concurrency: 3 });
+      console.info('Network idle detected, extracting content');
       return page.content();
     });
 

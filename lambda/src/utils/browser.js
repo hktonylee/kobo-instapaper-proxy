@@ -24,20 +24,26 @@ export const applyStealthTweaks = async (page) => {
 
 export const withPage = async (chromiumLib, puppeteerLib, work) => {
   const executablePath = await chromiumLib.executablePath();
+  console.info('Launching browser', { executablePath });
   const browser = await puppeteerLib.launch({
     args: chromiumLib.args,
     executablePath,
     headless: chromiumLib.headless,
     defaultViewport: { width: 1280, height: 800 },
   });
+  console.info('Browser launched');
 
   try {
+    console.info('Creating new page');
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(0);
+    console.info('Applying stealth tweaks');
     await applyStealthTweaks(page);
+    console.info('Running page work');
     return await work(page);
   } finally {
     // Fire and forget to avoid awaiting browser shutdown.
+    console.info('Closing browser');
     browser.close().catch(() => {});
   }
 };
