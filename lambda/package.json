@@ -15,7 +15,8 @@
     "@sparticuz/chromium": "^126.0.0",
     "jsdom": "^24.1.0",
     "puppeteer": "^24.31.0",
-    "puppeteer-core": "^22.10.0"
+    "puppeteer-core": "^22.10.0",
+    "whatwg-fetch": "^3.6.20"
   },
   "devDependencies": {
     "esbuild": "^0.23.1"
