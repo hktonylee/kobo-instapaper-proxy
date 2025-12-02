@@ -99,10 +99,23 @@ resource "aws_apigatewayv2_integration" "lambda" {
   payload_format_version = "2.0"
 }
 
+resource "aws_apigatewayv2_integration" "favicon" {
+  api_id           = aws_apigatewayv2_api.proxy.id
+  integration_type = "HTTP_PROXY"
+  integration_method = "GET"
+  integration_uri  = "https://httpstat.us/204"
+}
+
 resource "aws_apigatewayv2_route" "proxy_route" {
   api_id    = aws_apigatewayv2_api.proxy.id
   route_key = "$default"
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+resource "aws_apigatewayv2_route" "favicon" {
+  api_id    = aws_apigatewayv2_api.proxy.id
+  route_key = "GET /favicon.ico"
+  target    = "integrations/${aws_apigatewayv2_integration.favicon.id}"
 }
 
 resource "aws_apigatewayv2_stage" "default" {
