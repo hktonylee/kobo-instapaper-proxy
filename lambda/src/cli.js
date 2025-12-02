@@ -3,15 +3,23 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHandler } from './handler.js';
 
-const USAGE = `Usage: npm run cli -- <url> [--output <file>] [--host <host>] [--proto <http|https>] [--prefix <basePath>]
+const USAGE = `Usage: npm run cli -- <url> [--output <file>] [--host <host>] [--proto <http|https>] [--prefix <basePath>] [--headful]
 
 Examples:
   npm run cli -- https://example.com/article
   npm run cli -- https://example.com/article --output article.html --host localhost:3000 --proto http --prefix /prod
+  npm run cli -- https://example.com/article --headful
 `;
 
 const parseArgs = (argv) => {
-  const args = { url: null, output: null, host: 'localhost', proto: 'http', prefix: '' };
+  const args = {
+    url: null,
+    output: null,
+    host: 'localhost',
+    proto: 'http',
+    prefix: '',
+    headless: true,
+  };
   const entries = [...argv];
 
   while (entries.length > 0) {
@@ -35,6 +43,9 @@ const parseArgs = (argv) => {
       case '--prefix':
         args.prefix = entries.shift() ?? args.prefix;
         break;
+      case '--headful':
+        args.headless = false;
+        break;
       case '--help':
       case '-h':
         return { ...args, help: true };
@@ -46,9 +57,9 @@ const parseArgs = (argv) => {
   return args;
 };
 
-const createLocalChromiumLib = (puppeteerLib) => ({
+const createLocalChromiumLib = (puppeteerLib, { headless = true } = {}) => ({
   args: [],
-  headless: true,
+  headless,
   executablePath: async () => puppeteerLib.executablePath(),
 });
 
@@ -85,7 +96,7 @@ const isDirectRun = () => {
 
 const main = async () => {
   try {
-    const { url, output, host, proto, prefix, help } = parseArgs(process.argv.slice(2));
+    const { url, output, host, proto, prefix, headless, help } = parseArgs(process.argv.slice(2));
 
     if (help || !url) {
       process.stdout.write(USAGE);
@@ -94,7 +105,10 @@ const main = async () => {
     }
 
     const { default: puppeteerLib } = await import('puppeteer');
-    const handler = createHandler({ chromiumLib: createLocalChromiumLib(puppeteerLib), puppeteerLib });
+    const handler = createHandler({
+      chromiumLib: createLocalChromiumLib(puppeteerLib, { headless }),
+      puppeteerLib,
+    });
     const response = await handler(buildEvent({ url, host, proto, prefix }));
 
     if (response.statusCode !== 200) {
