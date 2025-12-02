@@ -1,7 +1,7 @@
 import { DEFAULT_USER_AGENT } from './constants.js';
 
 const LAMBDA_TIMEOUT_MS = 15000;
-const NAVIGATION_TIMEOUT_MS = LAMBDA_TIMEOUT_MS - 1000;
+const NAVIGATION_TIMEOUT_MS = LAMBDA_TIMEOUT_MS - 3000;
 
 export const applyStealthTweaks = async (page) => {
   await page.setUserAgent(DEFAULT_USER_AGENT);
