@@ -4,11 +4,11 @@ import { Readability } from '@mozilla/readability';
 import { createHandler } from '../src/handler.js';
 import { NAVIGATION_TIMEOUT_MS } from '../src/utils/constants.js';
 
-const createPageMocks = ({ goto, content } = {}) => {
+const createPageMocks = ({ goto, content, waitForNetworkIdle } = {}) => {
   const gotoMock = goto ?? mock.fn(async () => {});
   const contentMock = content ?? mock.fn(async () => '<html><body><p>Content</p></body></html>');
   const setDefaultNavigationTimeout = mock.fn(() => {});
-  const waitForNetworkIdle = mock.fn(async () => {});
+  const waitForNetworkIdleMock = waitForNetworkIdle ?? mock.fn(async () => {});
   const setUserAgent = mock.fn(async () => {});
   const setExtraHTTPHeaders = mock.fn(async () => {});
   const evaluateOnNewDocument = mock.fn(async () => {});
@@ -18,7 +18,7 @@ const createPageMocks = ({ goto, content } = {}) => {
       goto: gotoMock,
       content: contentMock,
       setDefaultNavigationTimeout,
-      waitForNetworkIdle,
+      waitForNetworkIdle: waitForNetworkIdleMock,
       setUserAgent,
       setExtraHTTPHeaders,
       evaluateOnNewDocument,
@@ -26,7 +26,7 @@ const createPageMocks = ({ goto, content } = {}) => {
     goto: gotoMock,
     content: contentMock,
     setDefaultNavigationTimeout,
-    waitForNetworkIdle,
+    waitForNetworkIdle: waitForNetworkIdleMock,
     setUserAgent,
     setExtraHTTPHeaders,
     evaluateOnNewDocument,
@@ -86,6 +86,76 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
 
   assert.equal(content.mock.calls.length, 1);
   assert.equal(close.mock.calls.length, 1);
+});
+
+test('handler continues rendering when navigation times out', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const timeoutError = new Error('Navigation Timeout');
+  timeoutError.name = 'TimeoutError';
+
+  const { page, goto, content, waitForNetworkIdle } = createPageMocks({
+    goto: mock.fn(async () => {
+      throw timeoutError;
+    }),
+  });
+  const close = mock.fn(async () => {});
+
+  const launch = mock.fn(async () => ({
+    newPage: async () => page,
+    close,
+  }));
+
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
+
+  const response = await handler({
+    rawPath: '/https://example.com/post',
+    headers: { host: 'proxy.test', 'x-forwarded-proto': 'https' },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(goto.mock.calls.length, 1);
+  assert.equal(waitForNetworkIdle.mock.calls.length, 1);
+  assert.equal(content.mock.calls.length, 1);
+});
+
+test('handler continues rendering when network idle wait times out', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const timeoutError = new Error('Network idle Timeout');
+  timeoutError.name = 'TimeoutError';
+
+  const { page, goto, content, waitForNetworkIdle } = createPageMocks({
+    waitForNetworkIdle: mock.fn(async () => {
+      throw timeoutError;
+    }),
+  });
+  const close = mock.fn(async () => {});
+
+  const launch = mock.fn(async () => ({
+    newPage: async () => page,
+    close,
+  }));
+
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
+
+  const response = await handler({
+    rawPath: '/https://example.com/post',
+    headers: { host: 'proxy.test', 'x-forwarded-proto': 'https' },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(goto.mock.calls.length, 1);
+  assert.equal(waitForNetworkIdle.mock.calls.length, 1);
+  assert.equal(content.mock.calls.length, 1);
 });
 
 test('handler welcome page proxies https inputs directly', async () => {

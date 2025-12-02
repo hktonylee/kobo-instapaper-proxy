@@ -57,11 +57,30 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
   try {
     const pageContent = await withPage(chromiumLib, puppeteerLib, async (page) => {
       console.info('Navigating to target URL', { targetUrl, timeout: NAVIGATION_TIMEOUT_MS });
-      await page.goto(targetUrl, { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
-      console.info('Navigation complete');
+      try {
+        await page.goto(targetUrl, { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
+        console.info('Navigation complete');
+      } catch (error) {
+        if (error?.name === 'TimeoutError') {
+          console.warn('Navigation timed out, continuing with page content extraction', { message: error.message });
+        } else {
+          throw error;
+        }
+      }
+
       console.info('Waiting for network idle');
-      await page.waitForNetworkIdle({ idleTime: 1500, timeout: 3000, concurrency: 3 });
-      console.info('Network idle detected, extracting content');
+      try {
+        await page.waitForNetworkIdle({ idleTime: 1500, timeout: 3000, concurrency: 3 });
+        console.info('Network idle detected');
+      } catch (error) {
+        if (error?.name === 'TimeoutError') {
+          console.warn('Network idle wait timed out, continuing with page content extraction', { message: error.message });
+        } else {
+          throw error;
+        }
+      }
+
+      console.info('Extracting content');
       return page.content();
     });
 
