@@ -28,7 +28,7 @@ export const buildWelcomePage = (proxyBase) => `<!doctype html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Welcome to the Proxy</title>
+  <title>Welcome to Readability Proxy</title>
   <style>
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; background: #f6f8fb; color: #1f2933; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
     .card { background: #fff; padding: 1.75rem; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); width: min(560px, 92vw); }
