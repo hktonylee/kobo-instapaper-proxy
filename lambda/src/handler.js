@@ -6,6 +6,10 @@ import { renderReadablePage } from './utils/readable.js';
 import { buildProxyBase, logRequestMetadata, normalizeTargetUrl } from './utils/request.js';
 import { NAVIGATION_TIMEOUT_MS } from './utils/constants.js';
 
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection', reason);
+});
+
 export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
   const rawPath = event.rawPath || event.path || '/';
   console.info('Incoming request path', {
