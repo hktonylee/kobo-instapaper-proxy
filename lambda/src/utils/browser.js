@@ -40,6 +40,7 @@ export const withPage = async (chromiumLib, puppeteerLib, work) => {
     await applyStealthTweaks(page);
     return await work(page);
   } finally {
-    await browser.close();
+    // Fire and forget to avoid awaiting browser shutdown.
+    browser.close().catch(() => {});
   }
 };
