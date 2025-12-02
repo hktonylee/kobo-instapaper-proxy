@@ -76,7 +76,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
   assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
   assert.equal(page.waitForNetworkIdle.mock.calls.length, 1);
-  assert.deepEqual(page.waitForNetworkIdle.mock.calls[0].arguments, [{ idleTime: 5000, concurrency: 3 }]);
+  assert.deepEqual(page.waitForNetworkIdle.mock.calls[0].arguments, [{ idleTime: 1500, timeout: 3000, concurrency: 3 }]);
 
   assert.equal(setUserAgent.mock.calls.length, 1);
   assert.equal(setUserAgent.mock.calls[0].arguments[0], 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');
