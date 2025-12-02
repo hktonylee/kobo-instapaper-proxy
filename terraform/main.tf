@@ -75,6 +75,7 @@ resource "aws_lambda_function" "proxy" {
 
   memory_size = 1536
   timeout     = 15
+  reserved_concurrent_executions = 5
 
   environment {
     variables = {
