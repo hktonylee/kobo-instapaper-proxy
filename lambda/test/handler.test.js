@@ -83,6 +83,28 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.equal(close.mock.calls.length, 1);
 });
 
+test('handler welcome page proxies https inputs directly', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch: () => {} } });
+
+  const response = await handler({
+    rawPath: '/',
+    headers: { host: 'proxy.test', 'x-forwarded-proto': 'https' },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.match(response.body, /id="search-form"/);
+  assert.match(response.body, /id="search-input"/);
+  assert.match(response.body, /const proxyBase = "https:\/\/proxy\.test"/);
+  assert.ok(response.body.includes("query.toLowerCase().startsWith('https://')"));
+  assert.match(response.body, /Search DuckDuckGo or paste https:\/\/ URL/);
+});
+
 test('handler keeps API gateway base path when rewriting links', async () => {
   const chromiumLib = {
     executablePath: async () => '/opt/chromium',

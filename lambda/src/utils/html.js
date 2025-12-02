@@ -42,11 +42,27 @@ export const buildWelcomePage = (proxyBase) => `<!doctype html>
 </head>
 <body>
   <main class="card" aria-labelledby="welcome-title">
-    <h1 id="welcome-title">Welcome</h1>
-    <form action="${proxyBase || ''}/https://duckduckgo.com/" method="get">
-      <input type="search" name="q" placeholder="Search DuckDuckGo" required />
+    <h1 id="welcome-title">Search or paste a link</h1>
+    <form id="search-form" action="${proxyBase || ''}/https://duckduckgo.com/" method="get">
+      <input id="search-input" type="search" name="q" placeholder="Search DuckDuckGo or paste https:// URL" required />
       <button type="submit">Search</button>
     </form>
   </main>
+  <script>
+    const proxyBase = ${JSON.stringify(proxyBase || '')};
+    const form = document.getElementById('search-form');
+    const input = document.getElementById('search-input');
+
+    form?.addEventListener('submit', (event) => {
+      const query = input?.value?.trim() || '';
+
+      if (query.toLowerCase().startsWith('https://')) {
+        event.preventDefault();
+        const encodedUrl = encodeURIComponent(query);
+        const destination = (proxyBase || '') + '/' + encodedUrl;
+        window.location.href = destination;
+      }
+    });
+  </script>
 </body>
 </html>`;
