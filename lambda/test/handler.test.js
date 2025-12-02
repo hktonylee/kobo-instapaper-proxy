@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mock, test } from 'node:test';
 import { Readability } from '@mozilla/readability';
 import { createHandler } from '../src/handler.js';
+import { NAVIGATION_TIMEOUT_MS } from '../src/utils/constants.js';
 
 const createPageMocks = ({ goto, content } = {}) => {
   const gotoMock = goto ?? mock.fn(async () => {});
@@ -73,7 +74,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.deepEqual(setDefaultNavigationTimeout.mock.calls[0].arguments, [0]);
   assert.equal(goto.mock.calls.length, 1);
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
-  assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'load' });
+  assert.deepEqual(goto.mock.calls[0].arguments[1], { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
   assert.equal(page.waitForNetworkIdle.mock.calls.length, 1);
   assert.deepEqual(page.waitForNetworkIdle.mock.calls[0].arguments, [{ idleTime: 5000 }]);
 
