@@ -7,6 +7,10 @@ import { buildProxyBase, logRequestMetadata, normalizeTargetUrl } from './utils/
 
 export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
   const rawPath = event.rawPath || event.path || '/';
+  console.info('Incoming request path', {
+    rawPath,
+    rawQueryString: event.rawQueryString,
+  });
   const lowerCasePath = rawPath.toLowerCase();
   if (lowerCasePath === '/favicon.ico' || lowerCasePath.endsWith('/favicon.ico')) {
     return { statusCode: 204, headers: { 'Cache-Control': 'no-store' }, body: '' };
