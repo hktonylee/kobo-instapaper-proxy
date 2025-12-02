@@ -18,4 +18,18 @@ Read web articles on a Kobo device or save them to Instapaper without unnecessar
    ```
 4. Open the combined link on your Kobo or send it to Instapaper to receive a reader-friendly version of the article.
 
+## Test locally with a CLI
+
+You can render pages locally without deploying to AWS Lambda by using the built-in CLI:
+
+```bash
+cd lambda
+npm install
+npm run cli -- https://www.example.com/news --output article.html
+```
+
+Flags:
+- `--output <file>`: Save the rendered HTML instead of printing to stdout.
+- `--host <value>` / `--proto <http|https>` / `--prefix <basePath>`: Override the proxy base used when rewriting links.
+
 For implementation details or configuration options, see [TECHNICAL.md](TECHNICAL.md).
