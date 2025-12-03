@@ -46,7 +46,7 @@ export const createHandler = ({
     pathPrefix = normalized.pathPrefix;
     pathSegments = pathPrefix.split('/').filter(Boolean);
     isJpgRequest = pathSegments[pathSegments.length - 1]?.toLowerCase() === 'jpg';
-    isUrlRequest = pathSegments[pathSegments.length - 1]?.toLowerCase() === 'url';
+    isUrlRequest = pathSegments[pathSegments.length - 1]?.toLowerCase() === 'urls';
     console.info('Normalized target URL', { targetUrl, pathPrefix });
   } catch (error) {
     return { statusCode: 400, body: error.message };

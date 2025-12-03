@@ -209,11 +209,11 @@ test('handler keeps API gateway base path when rewriting links', async () => {
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
 });
 
-test('url subpath rewrites links without altering the original markup', async (t) => {
+test('urls subpath rewrites links without altering the original markup', async (t) => {
   t.after(() => mock.restoreAll());
 
   mock.method(Readability.prototype, 'parse', () => {
-    throw new Error('Readability should not run for /url/ requests');
+    throw new Error('Readability should not run for /urls/ requests');
   });
 
   const chromiumLib = {
@@ -235,14 +235,14 @@ test('url subpath rewrites links without altering the original markup', async (t
   const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
 
   const response = await handler({
-    rawPath: '/url/https://example.com/post',
+    rawPath: '/urls/https://example.com/post',
     headers: { host: 'proxy.test', 'x-forwarded-proto': 'https' },
   });
 
   assert.equal(response.statusCode, 200);
   assert.match(response.body, /<title>Example Article<\/title>/);
   assert.match(response.body, /<main>.*href="https:\/\/proxy\.test\/https:\/\/example\.com\/foo".*Next.*Content.*<\/main>/s);
-  assert.equal(response.body.includes('/url/https://example.com/foo'), false);
+  assert.equal(response.body.includes('/urls/https://example.com/foo'), false);
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
 });
 
