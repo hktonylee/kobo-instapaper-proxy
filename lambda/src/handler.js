@@ -108,7 +108,7 @@ export const createHandler = ({
 
       console.info('Waiting for network idle');
       try {
-        await page.waitForNetworkIdle({ idleTime: 500, timeout: 1000, concurrency: 3 });
+        await page.waitForNetworkIdle({ idleTime: 500, timeout: 1000, concurrency: 10 });
         console.info('Network idle detected');
       } catch (error) {
         if (isTimeoutError(error)) {
