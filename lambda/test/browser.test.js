@@ -21,6 +21,11 @@ test('withPage closes browser without force quit by default', async () => {
   const browserProcess = { killed: false, kill: mock.fn(() => { browserProcess.killed = true; }) };
   const close = mock.fn(async () => {});
   const killProcess = mock.method(process, 'kill', mock.fn(() => {}));
+  const timers = [];
+  const setTimeoutMock = mock.method(globalThis, 'setTimeout', (fn, ms) => {
+    timers.push({ fn, ms });
+    return { unref: mock.fn(() => {}) };
+  });
 
   const launch = mock.fn(async () => ({
     newPage: async () => page,
@@ -35,8 +40,10 @@ test('withPage closes browser without force quit by default', async () => {
   assert.equal(close.mock.calls.length, 1);
   assert.equal(browserProcess.kill.mock.calls.length, 0);
   assert.equal(killProcess.mock.calls.length, 0);
+  assert.equal(timers.length, 0);
 
   killProcess.mock.restore();
+  setTimeoutMock.mock.restore();
 });
 
 test('withPage force quits when enabled and close fails', async () => {
@@ -45,6 +52,11 @@ test('withPage force quits when enabled and close fails', async () => {
   const browserProcess = { killed: false, kill: mock.fn(() => { browserProcess.killed = true; }) };
   const close = mock.fn(async () => { throw new Error('close failed'); });
   const killProcess = mock.method(process, 'kill', mock.fn(() => {}));
+  const timers = [];
+  const setTimeoutMock = mock.method(globalThis, 'setTimeout', (fn, ms) => {
+    timers.push({ fn, ms });
+    return { unref: mock.fn(() => {}) };
+  });
 
   const launch = mock.fn(async () => ({
     newPage: async () => page,
@@ -56,11 +68,19 @@ test('withPage force quits when enabled and close fails', async () => {
 
   assert.equal(result, 'still ok');
   assert.equal(close.mock.calls.length, 1);
+  assert.equal(browserProcess.kill.mock.calls.length, 0);
+  assert.equal(killProcess.mock.calls.length, 0);
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0].ms, 3000);
+
+  timers[0].fn();
+
   assert.equal(browserProcess.kill.mock.calls.length, 1);
   assert.equal(browserProcess.killed, true);
   assert.equal(killProcess.mock.calls.length, 0);
 
   killProcess.mock.restore();
+  setTimeoutMock.mock.restore();
 });
 
 test('withPage force quits the browser PID when still running', async () => {
@@ -69,6 +89,11 @@ test('withPage force quits the browser PID when still running', async () => {
   const browserProcess = { pid: 123, killed: false, kill: mock.fn(() => {}) };
   const close = mock.fn(async () => {});
   const killProcess = mock.method(process, 'kill', mock.fn(() => {}));
+  const timers = [];
+  const setTimeoutMock = mock.method(globalThis, 'setTimeout', (fn, ms) => {
+    timers.push({ fn, ms });
+    return { unref: mock.fn(() => {}) };
+  });
 
   const launch = mock.fn(async () => ({
     newPage: async () => page,
@@ -80,9 +105,17 @@ test('withPage force quits the browser PID when still running', async () => {
 
   assert.equal(result, 'done');
   assert.equal(close.mock.calls.length, 1);
+  assert.equal(browserProcess.kill.mock.calls.length, 0);
+  assert.equal(killProcess.mock.calls.length, 0);
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0].ms, 3000);
+
+  timers[0].fn();
+
   assert.equal(browserProcess.kill.mock.calls.length, 1);
   assert.equal(killProcess.mock.calls.length, 1);
   assert.deepEqual(killProcess.mock.calls[0].arguments, [123, 'SIGKILL']);
 
   killProcess.mock.restore();
+  setTimeoutMock.mock.restore();
 });

@@ -52,24 +52,27 @@ export const withPage = async (chromiumLib, puppeteerLib, work, { forceQuit = fa
     }
 
     if (forceQuit && browserProcess) {
-      if (!browserProcess.killed) {
-        console.info('Force quitting browser process');
-        try {
-          browserProcess.kill('SIGKILL');
-        } catch (error) {
-          console.warn('Force quit failed', { message: error?.message });
+      const timeout = setTimeout(() => {
+        if (!browserProcess.killed) {
+          console.info('Force quitting browser process');
+          try {
+            browserProcess.kill('SIGKILL');
+          } catch (error) {
+            console.warn('Force quit failed', { message: error?.message });
+          }
         }
-      }
 
-      if (!browserProcess.killed && browserProcess.pid) {
-        console.info('Force quitting browser process by PID');
-        try {
-          process.kill(browserProcess.pid, 'SIGKILL');
-        } catch (error) {
-          console.warn('Force quit by PID failed', { message: error?.message });
+        if (!browserProcess.killed && browserProcess.pid) {
+          console.info('Force quitting browser process by PID');
+          try {
+            process.kill(browserProcess.pid, 'SIGKILL');
+          } catch (error) {
+            console.warn('Force quit by PID failed', { message: error?.message });
+          }
         }
-      }
+      }, 3000);
 
+      timeout.unref?.();
     }
   }
 };
