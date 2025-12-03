@@ -63,7 +63,7 @@ test('withPage force quits when enabled and close fails', async () => {
   killProcess.mock.restore();
 });
 
-test('withPage force quits the browser PID and Node.js process when still running', async () => {
+test('withPage force quits the browser PID when still running', async () => {
   const page = createPage();
   const work = mock.fn(async () => 'done');
   const browserProcess = { pid: 123, killed: false, kill: mock.fn(() => {}) };
@@ -81,9 +81,8 @@ test('withPage force quits the browser PID and Node.js process when still runnin
   assert.equal(result, 'done');
   assert.equal(close.mock.calls.length, 1);
   assert.equal(browserProcess.kill.mock.calls.length, 1);
-  assert.equal(killProcess.mock.calls.length, 2);
+  assert.equal(killProcess.mock.calls.length, 1);
   assert.deepEqual(killProcess.mock.calls[0].arguments, [123, 'SIGKILL']);
-  assert.deepEqual(killProcess.mock.calls[1].arguments, [process.pid, 'SIGKILL']);
 
   killProcess.mock.restore();
 });

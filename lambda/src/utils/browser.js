@@ -70,14 +70,6 @@ export const withPage = async (chromiumLib, puppeteerLib, work, { forceQuit = fa
         }
       }
 
-      if (!browserProcess.killed) {
-        console.info('Force quitting Node.js process');
-        try {
-          process.kill(process.pid, 'SIGKILL');
-        } catch (error) {
-          console.warn('Force quit of Node.js process failed', { message: error?.message });
-        }
-      }
     }
   }
 };
