@@ -19,12 +19,18 @@ const applyFetchPolyfill = (window) => {
   }
 };
 
-export const renderReadablePage = (pageContent, targetUrl, proxyBase, { jpgProxyBase = '' } = {}) => {
+const createVirtualConsole = () => {
   const virtualConsole = new VirtualConsole();
   virtualConsole.on('jsdomError', (error) => {
     const message = error?.cause?.message ?? error?.message ?? String(error);
     console.error(`[JSDOM] ${message}`);
   });
+
+  return virtualConsole;
+};
+
+export const renderReadablePage = (pageContent, targetUrl, proxyBase, { jpgProxyBase = '' } = {}) => {
+  const virtualConsole = createVirtualConsole();
 
   const dom = new JSDOM(pageContent, {
     url: targetUrl,
@@ -51,6 +57,28 @@ export const renderReadablePage = (pageContent, targetUrl, proxyBase, { jpgProxy
   const title = article?.title || dom.window.document.title || 'Saved article';
   const bodyHtml = articleDom.window.document.body.innerHTML;
   const html = buildArticleHtml(title, bodyHtml);
+
+  return { html, title };
+};
+
+export const renderLinkRewrittenPage = (pageContent, targetUrl, proxyBase, { jpgProxyBase = '' } = {}) => {
+  const virtualConsole = createVirtualConsole();
+
+  const dom = new JSDOM(pageContent, {
+    url: targetUrl,
+    runScripts: 'dangerously',
+    resources: 'usable',
+    pretendToBeVisual: true,
+    virtualConsole,
+  });
+  applyFetchPolyfill(dom.window);
+
+  if (proxyBase) {
+    resolveAndRewrite(dom.window.document, proxyBase, targetUrl, { jpgProxyBase });
+  }
+
+  const html = dom.serialize();
+  const title = dom.window.document.title || 'Saved article';
 
   return { html, title };
 };

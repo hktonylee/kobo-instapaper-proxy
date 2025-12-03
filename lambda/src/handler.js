@@ -2,7 +2,7 @@ import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
 import { withPage } from './utils/browser.js';
 import { buildWelcomePage } from './utils/html.js';
-import { renderReadablePage } from './utils/readable.js';
+import { renderLinkRewrittenPage, renderReadablePage } from './utils/readable.js';
 import { buildProxyBase, logRequestMetadata, normalizeTargetUrl } from './utils/request.js';
 import { NAVIGATION_TIMEOUT_MS } from './utils/constants.js';
 import { fetchAndConvertToJpeg } from './utils/image.js';
@@ -34,6 +34,8 @@ export const createHandler = ({
   let targetUrl;
   let pathPrefix = '';
   let isJpgRequest = false;
+  let isUrlRequest = false;
+  let pathSegments = [];
   try {
     const rawQueryString = event.rawQueryString || '';
     const rawTarget = rawQueryString ? `${rawPath}?${rawQueryString}` : rawPath;
@@ -42,15 +44,19 @@ export const createHandler = ({
     const normalized = normalizeTargetUrl(rawTarget);
     targetUrl = normalized.targetUrl;
     pathPrefix = normalized.pathPrefix;
-    const pathSegments = pathPrefix.split('/').filter(Boolean);
+    pathSegments = pathPrefix.split('/').filter(Boolean);
     isJpgRequest = pathSegments[pathSegments.length - 1]?.toLowerCase() === 'jpg';
+    isUrlRequest = pathSegments[pathSegments.length - 1]?.toLowerCase() === 'url';
     console.info('Normalized target URL', { targetUrl, pathPrefix });
   } catch (error) {
     return { statusCode: 400, body: error.message };
   }
 
   const proxyBase = buildProxyBase(event, pathPrefix);
-  console.info('Computed proxy base', { proxyBase });
+  const linkRewriteProxyBase = isUrlRequest
+    ? buildProxyBase(event, pathSegments.slice(0, -1).join('/'))
+    : proxyBase;
+  console.info('Computed proxy base', { proxyBase, linkRewriteProxyBase });
 
   if (isJpgRequest) {
     try {
@@ -83,7 +89,7 @@ export const createHandler = ({
     };
   }
 
-  logRequestMetadata(event, { targetUrl, pathPrefix, proxyBase });
+  logRequestMetadata(event, { targetUrl, pathPrefix, proxyBase: linkRewriteProxyBase });
 
   let response;
   try {
@@ -116,8 +122,10 @@ export const createHandler = ({
       return page.content();
     }, { forceQuit: true });
 
-    const jpgProxyBase = proxyBase ? `${proxyBase}/jpg` : '';
-    const { html } = renderReadablePage(pageContent, targetUrl, proxyBase, { jpgProxyBase });
+    const jpgProxyBase = linkRewriteProxyBase ? `${linkRewriteProxyBase}/jpg` : '';
+    const renderResult = isUrlRequest
+      ? renderLinkRewrittenPage(pageContent, targetUrl, linkRewriteProxyBase, { jpgProxyBase })
+      : renderReadablePage(pageContent, targetUrl, linkRewriteProxyBase, { jpgProxyBase });
 
     response = {
       statusCode: 200,
@@ -125,7 +133,7 @@ export const createHandler = ({
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'max-age=3600',
       },
-      body: html,
+      body: renderResult.html,
     };
   } catch (error) {
     console.error('Rendering failed', error);
