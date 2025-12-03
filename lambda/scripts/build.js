@@ -37,3 +37,10 @@ cpSync('node_modules/sharp', 'dist/node_modules/sharp', { recursive: true });
 if (existsSync('node_modules/@img')) {
   cpSync('node_modules/@img', 'dist/node_modules/@img', { recursive: true });
 }
+const sharpDeps = ['detect-libc', 'color', 'semver'];
+for (const dep of sharpDeps) {
+  const depPath = `node_modules/${dep}`;
+  if (existsSync(depPath)) {
+    cpSync(depPath, `dist/node_modules/${dep}`, { recursive: true });
+  }
+}
