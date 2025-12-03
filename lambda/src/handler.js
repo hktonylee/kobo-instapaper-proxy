@@ -10,6 +10,9 @@ process.on('unhandledRejection', (reason) => {
   console.error('Unhandled promise rejection', reason);
 });
 
+const isTimeoutError = (error) => error?.name === 'TimeoutError'
+  || error?.message?.includes('Timed out after waiting');
+
 export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
   const rawPath = event.rawPath || event.path || '/';
   console.info('Incoming request path', {
@@ -61,7 +64,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
         await page.goto(targetUrl, { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
         console.info('Navigation complete');
       } catch (error) {
-        if (error?.name === 'TimeoutError') {
+        if (isTimeoutError(error)) {
           console.warn('Navigation timed out, continuing with page content extraction', { message: error.message });
         } else {
           throw error;
@@ -73,7 +76,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
         await page.waitForNetworkIdle({ idleTime: 1500, timeout: 3000, concurrency: 3 });
         console.info('Network idle detected');
       } catch (error) {
-        if (error?.name === 'TimeoutError') {
+        if (isTimeoutError(error)) {
           console.warn('Network idle wait timed out, continuing with page content extraction', { message: error.message });
         } else {
           throw error;
