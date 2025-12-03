@@ -109,7 +109,12 @@ const main = async () => {
     const handler = createHandler({
       chromiumLib: createLocalChromiumLib(puppeteerLib, { headless }),
       puppeteerLib,
-      withPageLib: (chromiumLib, puppeteerLib, work) => withPage(chromiumLib, puppeteerLib, work, { forceQuit: true }),
+      withPageLib: (chromiumLib, puppeteerLib, work, options = {}) => withPage(
+        chromiumLib,
+        puppeteerLib,
+        work,
+        { forceQuit: true, ...options },
+      ),
     });
     const response = await handler(buildEvent({ url, host, proto, prefix }));
 
