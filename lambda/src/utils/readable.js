@@ -34,7 +34,7 @@ export const renderReadablePage = (pageContent, targetUrl, proxyBase, { jpgProxy
     virtualConsole,
   });
   applyFetchPolyfill(dom.window);
-  const article = new Readability(dom.window.document).parse();
+  const article = new Readability(dom.window.document, { charThreshold: 20 }).parse();
 
   const contentHtml = article?.content || dom.window.document.body.innerHTML;
   const articleDom = new JSDOM(contentHtml, {

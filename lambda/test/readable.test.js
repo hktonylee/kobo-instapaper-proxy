@@ -21,3 +21,20 @@ test('renders page while logging concise JSDOM errors', () => {
     mock.restoreAll();
   }
 });
+
+test('renderReadablePage keeps short content by lowering Readability threshold', () => {
+  const html = [
+    '<html>',
+    '<head><title>Short Article</title></head>',
+    '<body>',
+    '<div><a href="/foo">Check this link</a></div>',
+    '<script>window.tracking = true;</script>',
+    '</body>',
+    '</html>',
+  ].join('');
+
+  const { html: rendered } = renderReadablePage(html, 'https://example.com/post', '');
+
+  assert.match(rendered, /Check this link/);
+  assert.doesNotMatch(rendered, /window\.tracking/);
+});
