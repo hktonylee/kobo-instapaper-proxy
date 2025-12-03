@@ -1,5 +1,5 @@
 import { build } from 'esbuild';
-import { copyFileSync, mkdirSync, writeFileSync } from 'fs';
+import { copyFileSync, cpSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -12,7 +12,7 @@ await build({
   format: 'cjs',
   target: 'node20',
   outfile: 'dist/src/handler.js',
-  external: ['@sparticuz/chromium'],
+  external: ['@sparticuz/chromium', 'sharp'],
   plugins: [
     {
       name: 'externalize-xhr-worker',
@@ -31,3 +31,9 @@ writeFileSync('dist/package.json', JSON.stringify({ type: 'commonjs' }, null, 2)
 
 const xhrWorkerPath = require.resolve('jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js');
 copyFileSync(xhrWorkerPath, 'dist/src/xhr-sync-worker.js');
+
+mkdirSync('dist/node_modules', { recursive: true });
+cpSync('node_modules/sharp', 'dist/node_modules/sharp', { recursive: true });
+if (existsSync('node_modules/@img')) {
+  cpSync('node_modules/@img', 'dist/node_modules/@img', { recursive: true });
+}

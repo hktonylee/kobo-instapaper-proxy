@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/handler.js",
   "scripts": {
-    "build": "rm -rf dist && CHROMIUM_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --ignore-scripts && node ./scripts/build.js",
+    "build": "rm -rf dist && CHROMIUM_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci && node ./scripts/build.js",
     "test": "node --test",
     "cli": "node src/cli.js",
     "install-browser": "npx @puppeteer/browsers install chrome@stable && echo 'Copy the downloaded chrome to the Puppeteer cache folder so puppeteer-core can find it.'"
