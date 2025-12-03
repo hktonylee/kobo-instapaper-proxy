@@ -30,13 +30,18 @@ export const renderReadablePage = (pageContent, targetUrl, proxyBase, { jpgProxy
     url: targetUrl,
     runScripts: 'dangerously',
     resources: 'usable',
+    pretendToBeVisual: true,
     virtualConsole,
   });
   applyFetchPolyfill(dom.window);
   const article = new Readability(dom.window.document).parse();
 
   const contentHtml = article?.content || dom.window.document.body.innerHTML;
-  const articleDom = new JSDOM(contentHtml, { url: targetUrl, virtualConsole });
+  const articleDom = new JSDOM(contentHtml, {
+    url: targetUrl,
+    virtualConsole,
+    pretendToBeVisual: true,
+  });
   applyFetchPolyfill(articleDom.window);
 
   if (proxyBase) {
