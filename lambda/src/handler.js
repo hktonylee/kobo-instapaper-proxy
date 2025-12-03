@@ -96,7 +96,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
 
       console.info('Waiting for network idle');
       try {
-        await page.waitForNetworkIdle({ idleTime: 1500, timeout: 3000, concurrency: 3 });
+        await page.waitForNetworkIdle({ idleTime: 500, timeout: 1000, concurrency: 3 });
         console.info('Network idle detected');
       } catch (error) {
         if (isTimeoutError(error)) {
