@@ -10,7 +10,7 @@ await build({
   minify: true,
   platform: 'node',
   format: 'cjs',
-  target: 'node20',
+  target: 'node22',
   outfile: 'dist/src/handler.js',
   external: ['@sparticuz/chromium'],
   plugins: [
