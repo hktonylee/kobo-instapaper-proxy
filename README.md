@@ -5,7 +5,7 @@ Read web articles on a Kobo device or save them to Instapaper without unnecessar
 ## What it does
 
 - Retrieves the article and removes pop-ups, banners, and sidebars so only the text remains.
-- Leaves images and media hosted on the source site so pages stay compact and fast.
+- Converts embedded images to JPEG via a `/jpg/` subpath so Kobo devices can display them reliably.
 - Rewrites links so article chains continue to work within the proxy.
 
 ## How to use it
@@ -16,7 +16,11 @@ Read web articles on a Kobo device or save them to Instapaper without unnecessar
    ```
    https://<your-invoke-url>/https://www.example.com/news
    ```
-4. Open the combined link on your Kobo or send it to Instapaper to receive a reader-friendly version of the article.
+4. To load an image through the proxy as a JPEG, prepend `/jpg/` before the target URL:
+   ```
+   https://<your-invoke-url>/jpg/https://www.example.com/path/to/image.png
+   ```
+5. Open the combined link on your Kobo or send it to Instapaper to receive a reader-friendly version of the article.
 
 ## Test locally with a CLI
 

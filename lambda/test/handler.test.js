@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mock, test } from 'node:test';
 import { Readability } from '@mozilla/readability';
+import sharp from 'sharp';
 import { createHandler } from '../src/handler.js';
 import { NAVIGATION_TIMEOUT_MS } from '../src/utils/constants.js';
 
@@ -60,8 +61,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.equal(response.statusCode, 200);
   assert.match(response.body, /Example Article/);
   assert.match(response.body, /https:\/\/proxy\.test\/https:\/\/example\.com\/foo\?bar=baz/);
-  assert.match(response.body, /<img href="https:\/\/proxy\.test\/https:\/\/example\.com\/gallery" src="https:\/\/example\.com\/images\/photo.jpg" srcset="https:\/\/example\.com\/images\/photo.jpg 1x, https:\/\/example\.com\/images\/photo@2x.jpg 2x" alt="example">/);
-  assert.doesNotMatch(response.body, /proxy\.test\/https:\/\/example\.com\/images/);
+  assert.match(response.body, /<img href="https:\/\/proxy\.test\/https:\/\/example\.com\/gallery" src="https:\/\/proxy\.test\/jpg\/https:\/\/example\.com\/images\/photo.jpg" srcset="https:\/\/proxy\.test\/jpg\/https:\/\/example\.com\/images\/photo.jpg 1x, https:\/\/proxy\.test\/jpg\/https:\/\/example\.com\/images\/photo@2x.jpg 2x" alt="example">/);
 
   assert.equal(launch.mock.calls.length, 1);
   const launchArgs = launch.mock.calls[0].arguments[0];
@@ -209,6 +209,48 @@ test('handler keeps API gateway base path when rewriting links', async () => {
   assert.equal(goto.mock.calls[0].arguments[0], 'https://example.com/post');
 });
 
+test('jpg subpath converts images to JPEG without launching a browser', async (t) => {
+  t.after(() => mock.restoreAll());
+
+  const pngBuffer = await sharp({
+    create: {
+      width: 1,
+      height: 1,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 1 },
+    },
+  }).png().toBuffer();
+
+  mock.method(globalThis, 'fetch', async () => new Response(pngBuffer, {
+    status: 200,
+    headers: { 'Content-Type': 'image/png' },
+  }));
+
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const launch = mock.fn(async () => ({ close: async () => {} }));
+  const handler = createHandler({ chromiumLib, puppeteerLib: { launch } });
+
+  const response = await handler({
+    rawPath: '/jpg/https://example.com/image.png',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.headers['Content-Type'], 'image/jpeg');
+  assert.equal(response.isBase64Encoded, true);
+
+  const outputBuffer = Buffer.from(response.body, 'base64');
+  const metadata = await sharp(outputBuffer).metadata();
+  assert.equal(metadata.format, 'jpeg');
+
+  assert.equal(fetch.mock.calls.length, 1);
+  assert.equal(launch.mock.calls.length, 0);
+});
+
 test('handler uses forwarded prefix header when base path is stripped before lambda', async () => {
   const chromiumLib = {
     executablePath: async () => '/opt/chromium',
@@ -267,9 +309,8 @@ test('assets keep their original URLs when readability parsing is unavailable', 
   });
 
   assert.equal(response.statusCode, 200);
-  assert.match(response.body, /<img href="https:\/\/proxy\.test\/https:\/\/example\.com\/gallery" src="\/images\/photo\.jpg" srcset="\/images\/photo\.jpg 1x, \/images\/photo@2x\.jpg 2x" alt="example">/);
+  assert.match(response.body, /<img href="https:\/\/proxy\.test\/https:\/\/example\.com\/gallery" src="https:\/\/proxy\.test\/jpg\/https:\/\/example\.com\/images\/photo.jpg" srcset="https:\/\/proxy\.test\/jpg\/https:\/\/example\.com\/images\/photo.jpg 1x, https:\/\/proxy\.test\/jpg\/https:\/\/example\.com\/images\/photo@2x.jpg 2x" alt="example">/);
   assert.match(response.body, /https:\/\/proxy\.test\/https:\/\/example\.com\/foo\?bar=baz/);
-  assert.doesNotMatch(response.body, /proxy\.test\/https:\/\/example\.com\/images/);
 });
 
 test('handler normalizes single-slash https URLs', async () => {

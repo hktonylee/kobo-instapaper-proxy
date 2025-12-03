@@ -19,7 +19,7 @@ const applyFetchPolyfill = (window) => {
   }
 };
 
-export const renderReadablePage = (pageContent, targetUrl, proxyBase) => {
+export const renderReadablePage = (pageContent, targetUrl, proxyBase, { jpgProxyBase = '' } = {}) => {
   const virtualConsole = new VirtualConsole();
   virtualConsole.on('jsdomError', (error) => {
     const message = error?.cause?.message ?? error?.message ?? String(error);
@@ -40,7 +40,7 @@ export const renderReadablePage = (pageContent, targetUrl, proxyBase) => {
   applyFetchPolyfill(articleDom.window);
 
   if (proxyBase) {
-    resolveAndRewrite(articleDom.window.document, proxyBase, targetUrl);
+    resolveAndRewrite(articleDom.window.document, proxyBase, targetUrl, { jpgProxyBase });
   }
 
   const title = article?.title || dom.window.document.title || 'Saved article';
