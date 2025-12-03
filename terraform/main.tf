@@ -69,7 +69,7 @@ resource "aws_lambda_function" "proxy" {
 
   role    = aws_iam_role.lambda_exec.arn
   handler = "src/handler.handler"
-  runtime = "nodejs20.x"
+  runtime = "nodejs22.x"
 
   layers = [local.chromium_layer]
 
