@@ -41,7 +41,7 @@ test('withPage force quits by default after delay', async () => {
   assert.equal(browserProcess.kill.mock.calls.length, 0);
   assert.equal(killProcess.mock.calls.length, 0);
   assert.equal(timers.length, 1);
-  assert.equal(timers[0].ms, 3000);
+  assert.equal(timers[0].ms, 1000);
 
   timers[0].fn();
 
@@ -78,7 +78,7 @@ test('withPage force quits when enabled and close fails', async () => {
   assert.equal(browserProcess.kill.mock.calls.length, 0);
   assert.equal(killProcess.mock.calls.length, 0);
   assert.equal(timers.length, 1);
-  assert.equal(timers[0].ms, 3000);
+  assert.equal(timers[0].ms, 1000);
 
   timers[0].fn();
 
@@ -115,7 +115,7 @@ test('withPage force quits the browser PID when still running', async () => {
   assert.equal(browserProcess.kill.mock.calls.length, 0);
   assert.equal(killProcess.mock.calls.length, 0);
   assert.equal(timers.length, 1);
-  assert.equal(timers[0].ms, 3000);
+  assert.equal(timers[0].ms, 1000);
 
   timers[0].fn();
 

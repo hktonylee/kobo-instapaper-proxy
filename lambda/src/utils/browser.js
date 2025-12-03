@@ -79,7 +79,7 @@ export const withPage = async (chromiumLib, puppeteerLib, work, { forceQuit = tr
             console.warn('Force quit of current process failed', { message: error?.message });
           }
         }
-      }, 3000);
+      }, 1000);
 
       timeout.unref?.();
     }
