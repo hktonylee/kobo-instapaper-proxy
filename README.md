@@ -37,3 +37,7 @@ Flags:
 - `--host <value>` / `--proto <http|https>` / `--prefix <basePath>`: Override the proxy base used when rewriting links.
 
 For implementation details or configuration options, see [TECHNICAL.md](TECHNICAL.md).
+
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
