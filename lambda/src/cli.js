@@ -2,6 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHandler } from './handler.js';
+import { withPage } from './utils/browser.js';
 
 const USAGE = `Usage: npm run cli -- <url> [--output <file>] [--host <host>] [--proto <http|https>] [--prefix <basePath>] [--headful]
 
@@ -108,6 +109,7 @@ const main = async () => {
     const handler = createHandler({
       chromiumLib: createLocalChromiumLib(puppeteerLib, { headless }),
       puppeteerLib,
+      withPageLib: (chromiumLib, puppeteerLib, work) => withPage(chromiumLib, puppeteerLib, work, { forceQuit: true }),
     });
     const response = await handler(buildEvent({ url, host, proto, prefix }));
 

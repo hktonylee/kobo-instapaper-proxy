@@ -22,7 +22,7 @@ export const applyStealthTweaks = async (page) => {
   });
 };
 
-export const withPage = async (chromiumLib, puppeteerLib, work) => {
+export const withPage = async (chromiumLib, puppeteerLib, work, { forceQuit = true } = {}) => {
   const executablePath = await chromiumLib.executablePath();
   console.info('Launching browser', { executablePath });
   const browser = await puppeteerLib.launch({
@@ -42,8 +42,46 @@ export const withPage = async (chromiumLib, puppeteerLib, work) => {
     console.info('Running page work');
     return await work(page);
   } finally {
-    // Fire and forget to avoid awaiting browser shutdown.
+    const browserProcess = browser?.process?.();
     console.info('Closing browser');
-    browser.close().catch(() => {});
+    try {
+      await browser.close();
+      console.info('Browser closed');
+    } catch (error) {
+      console.warn('Browser close failed', { message: error?.message });
+    }
+
+    if (forceQuit && browserProcess) {
+      const timeout = setTimeout(() => {
+        if (!browserProcess.killed) {
+          console.info('Force quitting browser process');
+          try {
+            browserProcess.kill('SIGKILL');
+          } catch (error) {
+            console.warn('Force quit failed', { message: error?.message });
+          }
+        }
+
+        if (!browserProcess.killed && browserProcess.pid) {
+          console.info('Force quitting browser process by PID');
+          try {
+            process.kill(browserProcess.pid, 'SIGKILL');
+          } catch (error) {
+            console.warn('Force quit by PID failed', { message: error?.message });
+          }
+        }
+
+        if (!browserProcess.killed) {
+          console.info('Force quitting current process');
+          try {
+            process.kill(process.pid, 'SIGKILL');
+          } catch (error) {
+            console.warn('Force quit of current process failed', { message: error?.message });
+          }
+        }
+      }, 3000);
+
+      timeout.unref?.();
+    }
   }
 };
