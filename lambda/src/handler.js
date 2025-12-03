@@ -5,6 +5,7 @@ import { buildWelcomePage } from './utils/html.js';
 import { renderReadablePage } from './utils/readable.js';
 import { buildProxyBase, logRequestMetadata, normalizeTargetUrl } from './utils/request.js';
 import { NAVIGATION_TIMEOUT_MS } from './utils/constants.js';
+import { fetchAndConvertToJpeg } from './utils/image.js';
 
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled promise rejection', reason);
@@ -27,6 +28,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
 
   let targetUrl;
   let pathPrefix = '';
+  let isJpgRequest = false;
   try {
     const rawQueryString = event.rawQueryString || '';
     const rawTarget = rawQueryString ? `${rawPath}?${rawQueryString}` : rawPath;
@@ -35,6 +37,8 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
     const normalized = normalizeTargetUrl(rawTarget);
     targetUrl = normalized.targetUrl;
     pathPrefix = normalized.pathPrefix;
+    const pathSegments = pathPrefix.split('/').filter(Boolean);
+    isJpgRequest = pathSegments[pathSegments.length - 1]?.toLowerCase() === 'jpg';
     console.info('Normalized target URL', { targetUrl, pathPrefix });
   } catch (error) {
     return { statusCode: 400, body: error.message };
@@ -42,6 +46,24 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
 
   const proxyBase = buildProxyBase(event, pathPrefix);
   console.info('Computed proxy base', { proxyBase });
+
+  if (isJpgRequest) {
+    try {
+      const { buffer, contentType } = await fetchAndConvertToJpeg(targetUrl);
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'max-age=86400',
+        },
+        isBase64Encoded: true,
+        body: buffer.toString('base64'),
+      };
+    } catch (error) {
+      console.error('Image fetch or conversion failed', error);
+      return { statusCode: 500, body: `Failed to convert image: ${error.message}` };
+    }
+  }
 
   if (!targetUrl) {
     const welcomeHtml = buildWelcomePage(proxyBase);
@@ -88,7 +110,8 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
       return page.content();
     });
 
-    const { html } = renderReadablePage(pageContent, targetUrl, proxyBase);
+    const jpgProxyBase = proxyBase ? `${proxyBase}/jpg` : '';
+    const { html } = renderReadablePage(pageContent, targetUrl, proxyBase, { jpgProxyBase });
 
     return {
       statusCode: 200,

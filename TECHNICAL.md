@@ -50,5 +50,5 @@ https://<invoke_url>/https://www.example.com/news
 ## Implementation notes
 
 - The Lambda uses headless Chromium from a Lambda layer (`@sparticuz/chromium`) with `puppeteer-core`. The build command skips downloading Chromium to keep the deployment package small; the executable is provided by the layer.
-- Links in the extracted article are rewritten to call back through the API Gateway host so that navigation stays within the proxy, while media assets load directly from their original hosts.
+- Links in the extracted article are rewritten to call back through the API Gateway host so that navigation stays within the proxy, while media assets are proxied through `/jpg/` to force JPEG output that Kobo e-readers can display.
 - The HTML response is intentionally minimal to work well on Kobo devices and for saving to Instapaper.
