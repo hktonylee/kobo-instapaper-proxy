@@ -12,6 +12,9 @@ export const MINIMAL_STYLES = `
   ul, ol { padding-left: 1.25rem; }
   blockquote { border-left: 4px solid #ddd; padding-left: 0.75rem; color: #555; }
   code { background: #f2f2f2; padding: 0.15rem 0.25rem; border-radius: 4px; font-size: 0.95rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th, td { border: 1px solid #c9ced6; padding: 0.55rem 0.75rem; }
+  th { background: #f2f4f7; text-align: left; }
 `;
 
 export const UNSUPPORTED_PROTOCOLS = ['javascript:', 'data:', 'mailto:', 'tel:'];
