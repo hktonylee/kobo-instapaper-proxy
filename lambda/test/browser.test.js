@@ -120,8 +120,9 @@ test('withPage force quits the browser PID when still running', async () => {
   timers[0].fn();
 
   assert.equal(browserProcess.kill.mock.calls.length, 1);
-  assert.equal(killProcess.mock.calls.length, 1);
+  assert.equal(killProcess.mock.calls.length, 2);
   assert.deepEqual(killProcess.mock.calls[0].arguments, [123, 'SIGKILL']);
+  assert.deepEqual(killProcess.mock.calls[1].arguments, [process.pid, 'SIGKILL']);
 
   killProcess.mock.restore();
   setTimeoutMock.mock.restore();

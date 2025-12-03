@@ -70,6 +70,15 @@ export const withPage = async (chromiumLib, puppeteerLib, work, { forceQuit = tr
             console.warn('Force quit by PID failed', { message: error?.message });
           }
         }
+
+        if (!browserProcess.killed) {
+          console.info('Force quitting current process');
+          try {
+            process.kill(process.pid, 'SIGKILL');
+          } catch (error) {
+            console.warn('Force quit of current process failed', { message: error?.message });
+          }
+        }
       }, 3000);
 
       timeout.unref?.();
