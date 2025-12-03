@@ -12,7 +12,7 @@ await build({
   format: 'cjs',
   target: 'node20',
   outfile: 'dist/src/handler.js',
-  external: ['@sparticuz/chromium', 'sharp'],
+  external: ['@sparticuz/chromium'],
   plugins: [
     {
       name: 'externalize-xhr-worker',
@@ -37,7 +37,7 @@ cpSync('node_modules/sharp', 'dist/node_modules/sharp', { recursive: true });
 if (existsSync('node_modules/@img')) {
   cpSync('node_modules/@img', 'dist/node_modules/@img', { recursive: true });
 }
-const sharpDeps = ['detect-libc', 'color', 'semver'];
+const sharpDeps = ['detect-libc', 'color', 'color-string', 'semver'];
 for (const dep of sharpDeps) {
   const depPath = `node_modules/${dep}`;
   if (existsSync(depPath)) {
