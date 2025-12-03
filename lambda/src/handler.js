@@ -15,7 +15,12 @@ const isTimeoutError = (error) => error?.name === 'TimeoutError'
   || error?.message?.includes('Timed out after waiting')
   || error?.message?.includes('Navigation timeout of ');
 
-export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer, withPageLib = withPage } = {}) => async (event) => {
+export const createHandler = ({
+  chromiumLib = chromium,
+  puppeteerLib = puppeteer,
+  withPageLib = withPage,
+  forceQuitCurrentProcess = scheduleForceQuitCurrentProcess,
+} = {}) => async (event) => {
   const rawPath = event.rawPath || event.path || '/';
   console.info('Incoming request path', {
     rawPath,
@@ -80,6 +85,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
 
   logRequestMetadata(event, { targetUrl, pathPrefix, proxyBase });
 
+  let response;
   try {
     const pageContent = await withPageLib(chromiumLib, puppeteerLib, async (page) => {
       console.info('Navigating to target URL', { targetUrl, timeout: NAVIGATION_TIMEOUT_MS });
@@ -108,12 +114,12 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
 
       console.info('Extracting content');
       return page.content();
-    });
+    }, { forceQuit: true });
 
     const jpgProxyBase = proxyBase ? `${proxyBase}/jpg` : '';
     const { html } = renderReadablePage(pageContent, targetUrl, proxyBase, { jpgProxyBase });
 
-    return {
+    response = {
       statusCode: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
@@ -123,8 +129,25 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
     };
   } catch (error) {
     console.error('Rendering failed', error);
-    return { statusCode: 500, body: `Failed to render: ${error.message}` };
+    response = { statusCode: 500, body: `Failed to render: ${error.message}` };
+  } finally {
+    forceQuitCurrentProcess();
   }
+
+  return response;
 };
 
 export const handler = createHandler();
+
+function scheduleForceQuitCurrentProcess({ delayMs = 1000, signal = 'SIGKILL' } = {}) {
+  const timeout = setTimeout(() => {
+    console.info('Force quitting current process');
+    try {
+      process.kill(process.pid, signal);
+    } catch (error) {
+      console.warn('Force quit of current process failed', { message: error?.message });
+    }
+  }, delayMs);
+
+  timeout.unref?.();
+}
