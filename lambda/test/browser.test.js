@@ -15,7 +15,7 @@ const createPage = () => ({
   evaluateOnNewDocument: mock.fn(async () => {}),
 });
 
-test('withPage closes browser without force quit by default', async () => {
+test('withPage force quits by default after delay', async () => {
   const page = createPage();
   const work = mock.fn(async () => 'ok');
   const browserProcess = { killed: false, kill: mock.fn(() => { browserProcess.killed = true; }) };
@@ -40,7 +40,14 @@ test('withPage closes browser without force quit by default', async () => {
   assert.equal(close.mock.calls.length, 1);
   assert.equal(browserProcess.kill.mock.calls.length, 0);
   assert.equal(killProcess.mock.calls.length, 0);
-  assert.equal(timers.length, 0);
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0].ms, 3000);
+
+  timers[0].fn();
+
+  assert.equal(browserProcess.kill.mock.calls.length, 1);
+  assert.equal(browserProcess.killed, true);
+  assert.equal(killProcess.mock.calls.length, 0);
 
   killProcess.mock.restore();
   setTimeoutMock.mock.restore();

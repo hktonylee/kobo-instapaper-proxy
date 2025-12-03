@@ -22,7 +22,7 @@ export const applyStealthTweaks = async (page) => {
   });
 };
 
-export const withPage = async (chromiumLib, puppeteerLib, work, { forceQuit = false } = {}) => {
+export const withPage = async (chromiumLib, puppeteerLib, work, { forceQuit = true } = {}) => {
   const executablePath = await chromiumLib.executablePath();
   console.info('Launching browser', { executablePath });
   const browser = await puppeteerLib.launch({
