@@ -15,7 +15,7 @@ const createPage = () => ({
   evaluateOnNewDocument: mock.fn(async () => {}),
 });
 
-test('withPage closes browser and force quits the process', async () => {
+test('withPage closes browser without force quit by default', async () => {
   const page = createPage();
   const work = mock.fn(async () => 'ok');
   const browserProcess = { killed: false, kill: mock.fn(() => { browserProcess.killed = true; }) };
@@ -33,14 +33,13 @@ test('withPage closes browser and force quits the process', async () => {
   assert.equal(result, 'ok');
   assert.equal(work.mock.calls.length, 1);
   assert.equal(close.mock.calls.length, 1);
-  assert.equal(browserProcess.kill.mock.calls.length, 1);
-  assert.equal(browserProcess.killed, true);
-
+  assert.equal(browserProcess.kill.mock.calls.length, 0);
   assert.equal(killProcess.mock.calls.length, 0);
+
   killProcess.mock.restore();
 });
 
-test('withPage force quits when browser close fails', async () => {
+test('withPage force quits when enabled and close fails', async () => {
   const page = createPage();
   const work = mock.fn(async () => 'still ok');
   const browserProcess = { killed: false, kill: mock.fn(() => { browserProcess.killed = true; }) };
@@ -53,18 +52,18 @@ test('withPage force quits when browser close fails', async () => {
     process: () => browserProcess,
   }));
 
-  const result = await withPage(chromiumLib, { launch }, work);
+  const result = await withPage(chromiumLib, { launch }, work, { forceQuit: true });
 
   assert.equal(result, 'still ok');
   assert.equal(close.mock.calls.length, 1);
   assert.equal(browserProcess.kill.mock.calls.length, 1);
   assert.equal(browserProcess.killed, true);
-
   assert.equal(killProcess.mock.calls.length, 0);
+
   killProcess.mock.restore();
 });
 
-test('withPage kills the browser PID when still running', async () => {
+test('withPage force quits the browser PID and Node.js process when still running', async () => {
   const page = createPage();
   const work = mock.fn(async () => 'done');
   const browserProcess = { pid: 123, killed: false, kill: mock.fn(() => {}) };
@@ -77,7 +76,7 @@ test('withPage kills the browser PID when still running', async () => {
     process: () => browserProcess,
   }));
 
-  const result = await withPage(chromiumLib, { launch }, work);
+  const result = await withPage(chromiumLib, { launch }, work, { forceQuit: true });
 
   assert.equal(result, 'done');
   assert.equal(close.mock.calls.length, 1);

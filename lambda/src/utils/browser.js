@@ -22,7 +22,7 @@ export const applyStealthTweaks = async (page) => {
   });
 };
 
-export const withPage = async (chromiumLib, puppeteerLib, work) => {
+export const withPage = async (chromiumLib, puppeteerLib, work, { forceQuit = false } = {}) => {
   const executablePath = await chromiumLib.executablePath();
   console.info('Launching browser', { executablePath });
   const browser = await puppeteerLib.launch({
@@ -51,7 +51,7 @@ export const withPage = async (chromiumLib, puppeteerLib, work) => {
       console.warn('Browser close failed', { message: error?.message });
     }
 
-    if (browserProcess) {
+    if (forceQuit && browserProcess) {
       if (!browserProcess.killed) {
         console.info('Force quitting browser process');
         try {

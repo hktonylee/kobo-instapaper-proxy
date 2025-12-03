@@ -15,7 +15,7 @@ const isTimeoutError = (error) => error?.name === 'TimeoutError'
   || error?.message?.includes('Timed out after waiting')
   || error?.message?.includes('Navigation timeout of ');
 
-export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
+export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer, withPageLib = withPage } = {}) => async (event) => {
   const rawPath = event.rawPath || event.path || '/';
   console.info('Incoming request path', {
     rawPath,
@@ -81,7 +81,7 @@ export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer
   logRequestMetadata(event, { targetUrl, pathPrefix, proxyBase });
 
   try {
-    const pageContent = await withPage(chromiumLib, puppeteerLib, async (page) => {
+    const pageContent = await withPageLib(chromiumLib, puppeteerLib, async (page) => {
       console.info('Navigating to target URL', { targetUrl, timeout: NAVIGATION_TIMEOUT_MS });
       try {
         await page.goto(targetUrl, { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
