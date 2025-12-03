@@ -11,7 +11,8 @@ process.on('unhandledRejection', (reason) => {
 });
 
 const isTimeoutError = (error) => error?.name === 'TimeoutError'
-  || error?.message?.includes('Timed out after waiting');
+  || error?.message?.includes('Timed out after waiting')
+  || error?.message?.includes('Navigation timeout of ');
 
 export const createHandler = ({ chromiumLib = chromium, puppeteerLib = puppeteer } = {}) => async (event) => {
   const rawPath = event.rawPath || event.path || '/';
