@@ -58,8 +58,7 @@ export const buildWelcomePage = (proxyBase) => `<!doctype html>
 
       if (query.toLowerCase().startsWith('https://')) {
         event.preventDefault();
-        const encodedUrl = encodeURIComponent(query);
-        const destination = (proxyBase || '') + '/' + encodedUrl;
+        const destination = (proxyBase || '') + '/' + query;
         window.location.href = destination;
       }
     });
