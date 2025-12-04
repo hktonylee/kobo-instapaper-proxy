@@ -4,7 +4,7 @@ This document collects the build, deployment, and implementation details for the
 
 ## Components
 
-- **Lambda** (`lambda/src/handler.js`): Navigates to a requested URL, renders it with `puppeteer-core` + `@sparticuz/chromium`, parses the readable article, rewrites navigation links to proxy through API Gateway, and returns a minimal HTML payload.
+- **Lambda** (`lambda/src/handler.js`): Navigates to a requested URL, renders it with `puppeteer-core` + `@sparticuz/chromium`, parses the readable article, rewrites navigation links to proxy through API Gateway, and returns a minimal HTML payload. The function runs on the `arm64` architecture.
 - **API Gateway (HTTP API)**: Receives any path (e.g., `/https://www.example.com/news`) and forwards the request to the Lambda. The Lambda uses the path to determine which URL to fetch and render.
 - **Terraform**: Creates the Lambda, its IAM role, CloudWatch log group, HTTP API, default `$default` route, and the required invocation permission. Uses an S3 backend for state.
 
@@ -31,7 +31,7 @@ encrypt = true
 
 ## Deploy with Terraform
 
-By default, the Terraform module will attach the pinned `@sparticuz/chromium` layer release `arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:50` (resolved for your chosen region). If you want to override it with a specific layer ARN, pass `-var "chromium_layer_arn=<your-layer-arn>"`.
+By default, the Terraform module will attach the pinned `@sparticuz/chromium` layer release `arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:50` (resolved for your chosen region). Ensure the layer you use supports the `arm64` architecture. If you want to override it with a specific layer ARN, pass `-var "chromium_layer_arn=<your-layer-arn>"`.
 
 ```bash
 cd terraform
