@@ -1,4 +1,4 @@
-import { DEFAULT_USER_AGENT } from './constants.js';
+import { DEFAULT_USER_AGENT, NAVIGATION_TIMEOUT_MS } from './constants.js';
 
 export const applyStealthTweaks = async (page) => {
   await page.setUserAgent(DEFAULT_USER_AGENT);
@@ -36,7 +36,7 @@ export const withPage = async (chromiumLib, puppeteerLib, work, { forceQuit = tr
   try {
     console.info('Creating new page');
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(0);
+    page.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
     console.info('Applying stealth tweaks');
     await applyStealthTweaks(page);
     console.info('Running page work');
