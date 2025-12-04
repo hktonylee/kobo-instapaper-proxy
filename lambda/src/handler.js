@@ -145,6 +145,11 @@ export const createHandler = ({
     forceQuitCurrentProcess();
   }
 
+  console.info('Returning response', {
+    statusCode: response?.statusCode,
+    headers: response?.headers,
+  });
+
   return response;
 };
 
