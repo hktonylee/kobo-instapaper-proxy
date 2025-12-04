@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { createHandler } from './handler.js';
+import { createHandler, scheduleForceQuitCurrentProcess, clearScheduledForceQuitCurrentProcess } from './handler.js';
 import { withPage } from './utils/browser.js';
 
 const USAGE = `Usage: npm run cli -- <url> [--output <file>] [--host <host>] [--proto <http|https>] [--prefix <basePath>] [--headful]
@@ -115,6 +115,8 @@ const main = async () => {
         work,
         { forceQuit: true, ...options },
       ),
+      forceQuitCurrentProcess: scheduleForceQuitCurrentProcess,
+      cancelForceQuitCurrentProcess: clearScheduledForceQuitCurrentProcess,
     });
     const response = await handler(buildEvent({ url, host, proto, prefix }));
 
