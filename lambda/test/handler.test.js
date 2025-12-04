@@ -177,6 +177,7 @@ test('handler welcome page proxies https inputs directly', async () => {
   assert.match(response.body, /id="search-input"/);
   assert.match(response.body, /const proxyBase = "https:\/\/proxy\.test"/);
   assert.ok(response.body.includes("query.toLowerCase().startsWith('https://')"));
+  assert.ok(!response.body.includes('encodeURIComponent('));
   assert.match(response.body, /Search DuckDuckGo or paste https:\/\/ URL/);
 });
 
