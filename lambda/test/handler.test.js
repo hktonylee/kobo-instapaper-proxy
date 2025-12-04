@@ -88,6 +88,41 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.equal(close.mock.calls.length, 1);
 });
 
+test('handler cancels a scheduled self-termination when reused', async () => {
+  const chromiumLib = {
+    executablePath: async () => '/opt/chromium',
+    args: ['--no-sandbox'],
+    headless: true,
+  };
+
+  const { page } = createPageMocks();
+  const close = mock.fn(async () => {});
+
+  const launch = mock.fn(async () => ({
+    newPage: async () => page,
+    close,
+  }));
+
+  const cancelForceQuitCurrentProcess = mock.fn(() => {});
+  const forceQuitCurrentProcess = mock.fn(() => {});
+
+  const handler = createHandler({
+    chromiumLib,
+    puppeteerLib: { launch },
+    cancelForceQuitCurrentProcess,
+    forceQuitCurrentProcess,
+  });
+
+  const response = await handler({
+    rawPath: '/https://example.com/post',
+    headers: { host: 'proxy.test', 'x-forwarded-proto': 'https' },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(cancelForceQuitCurrentProcess.mock.calls.length, 1);
+  assert.equal(forceQuitCurrentProcess.mock.calls.length, 1);
+});
+
 test('handler continues rendering when navigation times out', async () => {
   const chromiumLib = {
     executablePath: async () => '/opt/chromium',

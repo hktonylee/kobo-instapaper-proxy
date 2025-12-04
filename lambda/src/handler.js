@@ -20,7 +20,10 @@ export const createHandler = ({
   puppeteerLib = puppeteer,
   withPageLib = withPage,
   forceQuitCurrentProcess = scheduleForceQuitCurrentProcess,
+  cancelForceQuitCurrentProcess = clearScheduledForceQuitCurrentProcess,
 } = {}) => async (event) => {
+  cancelForceQuitCurrentProcess();
+
   const rawPath = event.rawPath || event.path || '/';
   console.info('Incoming request path', {
     rawPath,
@@ -147,8 +150,12 @@ export const createHandler = ({
 
 export const handler = createHandler();
 
+let forceQuitTimeout;
+
 function scheduleForceQuitCurrentProcess({ delayMs = 1000, signal = 'SIGKILL' } = {}) {
-  const timeout = setTimeout(() => {
+  clearScheduledForceQuitCurrentProcess();
+
+  forceQuitTimeout = setTimeout(() => {
     console.info('Force quitting current process');
     try {
       process.kill(process.pid, signal);
@@ -157,5 +164,14 @@ function scheduleForceQuitCurrentProcess({ delayMs = 1000, signal = 'SIGKILL' } 
     }
   }, delayMs);
 
-  timeout.unref?.();
+  forceQuitTimeout.unref?.();
+
+  return forceQuitTimeout;
+}
+
+function clearScheduledForceQuitCurrentProcess() {
+  if (forceQuitTimeout) {
+    clearTimeout(forceQuitTimeout);
+    forceQuitTimeout = undefined;
+  }
 }
