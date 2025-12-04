@@ -19,8 +19,8 @@ export const createHandler = ({
   chromiumLib = chromium,
   puppeteerLib = puppeteer,
   withPageLib = withPage,
-  forceQuitCurrentProcess = scheduleForceQuitCurrentProcess,
-  cancelForceQuitCurrentProcess = clearScheduledForceQuitCurrentProcess,
+  forceQuitCurrentProcess = () => {},
+  cancelForceQuitCurrentProcess = () => {},
 } = {}) => async (event) => {
   cancelForceQuitCurrentProcess();
 
@@ -152,7 +152,7 @@ export const handler = createHandler();
 
 let forceQuitTimeout;
 
-function scheduleForceQuitCurrentProcess({ delayMs = 1000, signal = 'SIGKILL' } = {}) {
+export function scheduleForceQuitCurrentProcess({ delayMs = 1000, signal = 'SIGKILL' } = {}) {
   clearScheduledForceQuitCurrentProcess();
 
   forceQuitTimeout = setTimeout(() => {
@@ -169,7 +169,7 @@ function scheduleForceQuitCurrentProcess({ delayMs = 1000, signal = 'SIGKILL' } 
   return forceQuitTimeout;
 }
 
-function clearScheduledForceQuitCurrentProcess() {
+export function clearScheduledForceQuitCurrentProcess() {
   if (forceQuitTimeout) {
     clearTimeout(forceQuitTimeout);
     forceQuitTimeout = undefined;
