@@ -3,7 +3,7 @@ import { mock, test } from 'node:test';
 import { Readability } from '@mozilla/readability';
 import sharp from 'sharp';
 import { createHandler } from '../src/handler.js';
-import { NAVIGATION_TIMEOUT_MS } from '../src/utils/constants.js';
+import { DEFAULT_USER_AGENT, NAVIGATION_TIMEOUT_MS } from '../src/utils/constants.js';
 
 const createPageMocks = ({ goto, content, waitForNetworkIdle } = {}) => {
   const gotoMock = goto ?? mock.fn(async () => {});
@@ -79,7 +79,7 @@ test('handler renders article HTML and rewrites links for proxy usage', async ()
   assert.deepEqual(page.waitForNetworkIdle.mock.calls[0].arguments, [{ idleTime: 500, timeout: 1000, concurrency: 10 }]);
 
   assert.equal(setUserAgent.mock.calls.length, 1);
-  assert.equal(setUserAgent.mock.calls[0].arguments[0], 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');
+  assert.equal(setUserAgent.mock.calls[0].arguments[0], DEFAULT_USER_AGENT);
   assert.equal(setExtraHTTPHeaders.mock.calls.length, 1);
   assert.deepEqual(setExtraHTTPHeaders.mock.calls[0].arguments[0], { 'Accept-Language': 'en-US,en;q=0.9' });
   assert.equal(evaluateOnNewDocument.mock.calls.length, 1);
