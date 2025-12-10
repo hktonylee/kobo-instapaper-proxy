@@ -1,8 +1,8 @@
 import 'whatwg-fetch';
-import { Readability } from '@mozilla/readability';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { buildArticleHtml } from './html.js';
 import { resolveAndRewrite } from './dom.js';
+import { selectReadability } from './readability/index.js';
 
 const applyFetchPolyfill = (window) => {
   if (!window.fetch && globalThis.fetch) {
@@ -40,7 +40,17 @@ export const renderReadablePage = (pageContent, targetUrl, proxyBase, { jpgProxy
     virtualConsole,
   });
   applyFetchPolyfill(dom.window);
-  const article = new Readability(dom.window.document).parse();
+
+  const readability = selectReadability(targetUrl);
+  let article;
+  try {
+    article = readability.parse(dom.window.document);
+  } catch (error) {
+    console.warn('Readability parse failed, falling back to raw body content', {
+      targetUrl,
+      message: error?.message,
+    });
+  }
 
   const contentHtml = article?.content || dom.window.document.body.innerHTML;
   const articleDom = new JSDOM(contentHtml, {
