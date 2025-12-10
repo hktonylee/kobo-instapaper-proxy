@@ -15,6 +15,10 @@ export const MINIMAL_STYLES = `
   table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
   th, td { border: 1px solid #c9ced6; padding: 0.55rem 0.75rem; }
   th { background: #f2f4f7; text-align: left; }
+  @media (max-width: 640px) {
+    body { margin: 0; max-width: none; padding: 0.85rem; background: #fff; }
+    article { box-shadow: none; border-radius: 0; background: none; padding: 0; }
+  }
 `;
 
 export const UNSUPPORTED_PROTOCOLS = ['javascript:', 'data:', 'mailto:', 'tel:'];
